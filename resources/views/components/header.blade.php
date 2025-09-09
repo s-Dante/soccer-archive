@@ -9,14 +9,14 @@
       <li><a href="{{ url('/about') }}">Acerca</a></li>
 
       @guest
-        <li><a href="{{ route('login.auth') }}">Iniciar Sesión</a></li>
-        <li><a href="{{ route('register.auth') }}">Registrarse</a></li>
+        <li><a href="{{ route('auth.login') }}">Iniciar Sesión</a></li>
+        <li><a href="{{ route('auth.register') }}">Registrarse</a></li>
       @endguest
 
       @auth
         <li><a href="{{ route('dashboard') }}">Dashboard</a></li>
         <li>
-          <form action="{{ route('logout') }}" method="POST">
+          <form action="{{ route('auth.logout') }}" method="POST">
             @csrf
             <button type="submit">Cerrar Sesión</button>
           </form>

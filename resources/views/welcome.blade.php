@@ -6,6 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Soccer Archive</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
+        .shadow {
+            box-shadow: 0px 0px 20px #00000044
+        }
+    </style>
 </head>
 
 <body class="bg-zinc-950 text-zinc-100">
@@ -64,7 +70,7 @@
     <main
         class="mx-auto max-w-[92dvw] h-[100dvh] px-4 py-10 bg-gradient-to-b from-zinc-800 from-5% to-stone-950 rounded-t-[50px] ">
         <div
-            class="h-[100dvh] w-[98%] bg-gradient-to-b from-stone-950 from-5% to-zinc-800 rounded-t-[25px] mx-auto p-10">
+            class="h-[100dvh] w-[98%] bg-gradient-to-b from-stone-950 from-5% to-zinc-800 rounded-t-[25px] mx-auto p-10 shadow">
             <section id="wc-carousel" class="relative">
 
                 {{-- Controles --}}
@@ -79,9 +85,9 @@
                 </button>
 
                 {{-- Escenario --}}
-                <div class="relative h-[500px] align-middle">
+                <div class="relative h-[500px] align.middle">
                     {{-- Arco de tarjetas generado por Blade --}}
-                    <div id="wc-arc" class="absolute inset-x-0 top-6 h-[600px] m-y-50">
+                    <div id="wc-arc" class="absolute inset-x-0 top- h-[600px] m-y-50">
                         {{-- Tarjetas generadas por Blade --}}
                         {{-- Nota: el indice es importante para la logica del carrusel --}}
                         @foreach ($wc as $idx => $item)
@@ -91,7 +97,7 @@
                                 data-cover="{{ $item['cover'] }}" data-ball="{{ $item['ball'] }}"
                                 aria-label="Ir a {{ $item['year'] }}" type="button">
                                 <img src="{{ $item['cover'] }}" alt="Mundial {{ $item['year'] }}"
-                                    class="h-[300px] w-auto rounded block rounded-[18px]">
+                                    class="h-[300px] w-auto rounded block rounded-[1rem]">
                             </button>
                         @endforeach
                     </div>

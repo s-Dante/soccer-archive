@@ -1,41 +1,63 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
 use App\Http\Controllers\WorldCupController;
-use App\Http\Controllers\PublicationController;
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Aquí registramos todas las rutas web para la aplicación.
+| Por ahora, todas son accesibles públicamente para demostración.
+|
+*/
 
-// Rutas para la pagina de inicio
+// --- RUTAS PÚBLICAS Y PRINCIPALES ---
+
+// Página de inicio con el carrusel de mundiales
 Route::get('/', [WorldCupController::class, 'index'])->name('home');
-Route::post('/', fn () => view('welcome'))->name('home');
 
-// Rutas para ver detalles de un mundial
+// Página de detalle de un mundial (infografía)
 Route::get('/world-cup/{year}', [WorldCupController::class, 'show'])->name('worldcup.show');
-Route::post('/world-cup/{year}', [WorldCupController::class, 'show'])->name('worldcup.show');
+
+// Página de resultados de búsqueda
+Route::view('/search', 'search')->name('search.index');
 
 
-// Rutas al iniciar sesion
-Route::middleware('auth')->group(function () {
-    Route::view('/me', 'user.me')->name('me');
-});
+// --- RUTAS DE AUTENTICACIÓN (Formularios) ---
+Route::prefix('auth')->name('auth.')->group(function () {
+    Route::view('/login', 'auth.login')->name('login');
+    Route::view('/login/verify', 'auth.login-auth')->name('login.verify'); // Token 2FA
+    Route::view('/register', 'auth.register')->name('register');
+    Route::view('/forgot-password', 'auth.forgot-pswd')->name('forgot');
+    Route::view('/forgot-password/verify', 'auth.forgot-pswd-auth')->name('forgot.verify'); // Token de reseteo
+    Route::view('/reset-password', 'auth.pswd-reset')->name('reset');
 
-// Rutas de autenticacion
-Route::prefix('auth')->name('auth.')->controller(AuthController::class)->group(function () {
-    Route::get('/login', 'login')->name('login');            // muestra formulario
-    Route::post('/login', 'loginAuth')->name('login.auth');  // procesa login
-
-    Route::get('/register', 'register')->name('register');         // muestra formulario
-    Route::post('/register', 'registerAuth')->name('register.auth'); // procesa registro
-
-    Route::get('/forgot', 'forgotPswd')->name('forgot');              // muestra formulario
-    Route::post('/forgot', 'forgotPswdAuth')->name('forgot.auth');    // procesa solicitud
-    Route::get('/reset/{token}', 'pswdReset')->name('reset');         // muestra reset
-
-    Route::post('/logout', 'logout')->name('logout'); // importante: POST
+    // Ruta de logout (simulada por ahora)
+    Route::get('/logout', fn() => redirect('/'))->name('logout');
 });
 
 
-// Rutas para las paginas de utilidades
-Route::get('/about', fn () => view('utils.about'))->name('about');
-Route::post('/about', fn () => view('utils.about'))->name('about');
+// --- RUTAS DEL PERFIL DE USUARIO ---
+Route::prefix('user')->name('user.')->group(function () {
+    Route::view('/profile', 'user.me')->name('me');
+    Route::view('/settings', 'user.settings')->name('settings');
+    Route::view('/contribute', 'user.contribute')->name('contribute');
+});
+
+
+// --- RUTAS DEL PANEL DE ADMINISTRADOR ---
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::view('/dashboard', 'admin.dashboard')->name('dashboard');
+    Route::view('/publications', 'admin.publications.index')->name('publications.index');
+    Route::view('/worldcups', 'admin.worldcups.index')->name('worldcups.index');
+    Route::view('/worldcups/create', 'admin.worldcups.create')->name('worldcups.create');
+    Route::view('/categories', 'admin.categories.index')->name('categories.index');
+    Route::view('/users', 'admin.users.index')->name('users.index');
+    Route::view('/comments', 'admin.comments.index')->name('comments.index');
+});
+
+
+// --- RUTAS PARA APIs EXTERNAS ---
+Route::view('/matches', 'matches.index')->name('matches.index');

@@ -40,7 +40,7 @@ class AuthController extends Controller
     }
 
     public function forgotPswd() {
-        return view('auth.forgot');
+        return view('auth.forgot-pswd');
     }
 
     public function forgotPswdAuth(Request $request) {
@@ -49,7 +49,7 @@ class AuthController extends Controller
     }
 
     public function pswdReset($token) {
-        return view('auth.reset', compact('token'));
+        return view('auth.pswd-reset', compact('token'));
     }
 
     // POST /auth/logout

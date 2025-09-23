@@ -2,11 +2,18 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\WorldCupController;
+use App\Http\Controllers\PublicationController;
 
 
 // Rutas para la pagina de inicio
-Route::get('/', fn () => view('welcome'))->name('home');
+Route::get('/', [WorldCupController::class, 'index'])->name('home');
 Route::post('/', fn () => view('welcome'))->name('home');
+
+// Rutas para ver detalles de un mundial
+Route::get('/world-cup/{year}', [WorldCupController::class, 'show'])->name('worldcup.show');
+Route::post('/world-cup/{year}', [WorldCupController::class, 'show'])->name('worldcup.show');
+
 
 // Rutas al iniciar sesion
 Route::middleware('auth')->group(function () {

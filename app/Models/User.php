@@ -45,4 +45,29 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+
+    /**
+     * Un usuario puede tener muchas publicaciones.
+     */
+    public function publications(): HasMany
+    {
+        return $this->hasMany(Publication::class);
+    }
+
+    /**
+     * Un usuario puede tener muchos comentarios.
+     */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    /**
+     * Un usuario puede tener muchas interacciones.
+     */
+    public function interactions(): HasMany
+    {
+        return $this->hasMany(Interaction::class);
+    }
 }

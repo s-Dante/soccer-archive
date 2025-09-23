@@ -28,16 +28,16 @@
     </div>
 
     <div class="w-80">
-        <nav class="glass p-1">
+        <nav class="glass p-[3px]">
             <ul class="flex justify-around items-center">
                 @guest
                     <li>
-                        <a href="{{ route('auth.login') }}" class="baloo-bhaijaan-2-medium block hover:bg-white/20 rounded-full py-3 px-6 transition-colors">
+                        <a href="{{ route('auth.login') }}" class="uppercase baloo-bhaijaan-2-medium block hover:bg-white/20 rounded-full py-2 px-6 transition-colors">
                             Log In
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('auth.register') }}" class="baloo-bhaijaan-2-medium block bg-white/10 hover:bg-white/20 rounded-full py-3 px-6 transition-colors">
+                        <a href="{{ route('auth.register') }}" class="uppercase baloo-bhaijaan-2-medium block hover:bg-white/20 rounded-full py-2 px-6 transition-colors">
                             Sign Up
                         </a>
                     </li>

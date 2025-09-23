@@ -1,4 +1,10 @@
-<x-app-layout>
+@extends('layouts.app')
+
+@section('title', 'Crear Contribución')
+
+@section('body_class', 'bg-neutral-800 text-white')
+
+@section('content')
     <div class="container mx-auto px-4 py-8 text-white">
         <h1 class="text-4xl font-bold mb-8">Crear una Nueva Contribución</h1>
 
@@ -17,10 +23,7 @@
                     <label for="world_cup_id" class="block mb-2 text-sm font-medium text-gray-300">Mundial al que Pertenece</label>
                     <select id="world_cup_id" name="world_cup_id" required class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg block w-full p-2.5">
                         <option selected disabled>Elige un mundial...</option>
-                        {{-- Aquí poblaremos dinámicamente los mundiales desde la BD --}}
-                        {{-- @foreach ($worldCups as $wc) --}}
-                        {{--     <option value="{{ $wc->id }}">{{ $wc->year }} - {{ $wc->host_country }}</option> --}}
-                        {{-- @endforeach --}}
+                        {{-- Ejemplo de datos dinámicos --}}
                         <option value="1">1986 - México</option>
                         <option value="2">2010 - Sudáfrica</option>
                     </select>
@@ -31,7 +34,7 @@
                     <label for="category_id" class="block mb-2 text-sm font-medium text-gray-300">Categoría</label>
                     <select id="category_id" name="category_id" required class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg block w-full p-2.5">
                         <option selected disabled>Elige una categoría...</option>
-                         {{-- Aquí poblaremos dinámicamente las categorías --}}
+                        {{-- Ejemplo de datos dinámicos --}}
                         <option value="1">Goles Históricos</option>
                         <option value="2">Jugadores Leyenda</option>
                         <option value="3">Curiosidades</option>
@@ -56,4 +59,4 @@
             </form>
         </div>
     </div>
-</x-app-layout>
+@endsection

@@ -1,4 +1,10 @@
-<x-app-layout>
+@extends('layouts.app')
+
+@section('title', 'Configuración de la Cuenta')
+
+@section('body_class', 'bg-neutral-800 text-white')
+
+@section('content')
     <div class="container mx-auto px-4 py-8 text-white">
         <h1 class="text-4xl font-bold mb-8">Configuración de la Cuenta</h1>
 
@@ -14,18 +20,18 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label for="name" class="block mb-2 text-sm font-medium text-gray-300">Nombre(s)</label>
-                        <input type="text" id="name" name="name" value="{{ old('name', Auth::user()->name) }}" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg block w-full p-2.5">
+                        <input type="text" id="name" name="name" value="{{ old('name', Auth::user()->name ?? '') }}" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg block w-full p-2.5">
                     </div>
                     <div>
                         <label for="last_name" class="block mb-2 text-sm font-medium text-gray-300">Apellidos</label>
-                        <input type="text" id="last_name" name="last_name" value="{{ old('last_name', Auth::user()->last_name) }}" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg block w-full p-2.5">
+                        <input type="text" id="last_name" name="last_name" value="{{ old('last_name', Auth::user()->last_name ?? '') }}" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg block w-full p-2.5">
                     </div>
                 </div>
 
-                {{-- Correo (usualmente no se puede cambiar) --}}
+                {{-- Correo (no se puede cambiar) --}}
                 <div>
                     <label for="email" class="block mb-2 text-sm font-medium text-gray-300">Correo Electrónico</label>
-                    <input type="email" id="email" value="{{ Auth::user()->email }}" class="bg-gray-900 border border-gray-700 text-gray-400 text-sm rounded-lg block w-full p-2.5" disabled>
+                    <input type="email" id="email" value="{{ Auth::user()->email ?? 'email@example.com' }}" class="bg-gray-900 border border-gray-700 text-gray-400 text-sm rounded-lg block w-full p-2.5" disabled>
                 </div>
                 
                 {{-- Foto de Perfil --}}
@@ -61,4 +67,4 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+@endsection

@@ -6,16 +6,6 @@
     <title>@yield('title') | Soccer Archive</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-    <style>
-        .glass {
-            background: rgba(255, 255, 255, .05);
-            border-radius: 1.5rem;
-            border: 1px solid rgba(255, 255, 255, .12);
-            box-shadow: 0 30px 80px rgba(0, 0, 0, .6);
-            backdrop-filter: blur(22px);
-        }
-    </style>
 </head>
 <body class="min-h-screen bg-neutral-800 text-white">
     <x-header/>

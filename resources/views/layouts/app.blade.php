@@ -13,13 +13,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400..800&display=swap" rel="stylesheet">
-
     
     @stack('head')
 </head>
 
-<body class="@yield('body_class', 'min-h-dvh bg-white text-neutral-900') relative">
-    {{-- Capa de fondo opcional por-página (debajo de todo) --}}
+<body class="bg-neutral-800 text-white relative"> {{-- Cambié el color de fondo para que coincida --}}
     @stack('underlay')
 
     {{-- Header siempre encima del fondo y del main --}}

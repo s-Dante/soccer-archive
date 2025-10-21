@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WorldCupController;
+use App\Http\Controllers\Api\PasswordValidationController;
+use App\Http\Request\RegisterUserRequest;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,7 +31,12 @@ Route::view('/search', 'search')->name('search.index');
 Route::prefix('auth')->name('auth.')->group(function () {
     Route::view('/login', 'auth.login')->name('login');
     Route::view('/login/verify', 'auth.login-auth')->name('login.verify'); // Token 2FA
-    Route::view('/register', 'auth.register')->name('register');
+
+    Route::get('/register', fn () => view('auth.register'))->name('register.show');
+
+    // Procesar formulario (POST)
+    Route::post('/register', [RegisterUserRequest::class, 'store'])->name('register');
+    
     Route::view('/forgot-password', 'auth.forgot-pswd')->name('forgot');
     Route::view('/forgot-password/verify', 'auth.forgot-pswd-auth')->name('forgot.verify'); // Token de reseteo
     Route::view('/reset-password', 'auth.pswd-reset')->name('reset');

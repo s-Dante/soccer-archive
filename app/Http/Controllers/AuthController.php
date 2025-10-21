@@ -33,10 +33,36 @@ class AuthController extends Controller
     }
 
     // POST /auth/register
-    public function registerAuth(Request $request) {
-        // Valida y crea usuario...
-        // Auth::login($user);
-        return redirect()->route('dashboard');
+    public function registerAuth(RegisterUserRequest $request)
+    {
+        // El código aquí solo se ejecuta si la validación en RegisterUserRequest pasa.
+
+        // 1. Manejar la subida de la foto de perfil (si existe)
+        $profilePhotoData = null;
+        if ($request->hasFile('profile_photo')) {
+            // Convertimos la imagen a datos binarios para el campo BLOB
+            $profilePhotoData = file_get_contents($request->file('profile_photo')->getRealPath());
+        }
+
+        // 2. Llamar al Procedimiento Almacenado para crear el usuario
+        DB::statement(
+            'CALL sp_insert_user(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [
+                $request->name,
+                $request->last_name,
+                $request->username,
+                $request->email,
+                Hash::make($request->password), // ¡Importante! Siempre hashear la contraseña
+                $profilePhotoData,
+                $request->gender,
+                $request->birthdate,
+                $request->country,
+                'user' // Rol por defecto
+            ]
+        );
+
+        // 3. Redirigir a la vista de login con un mensaje de éxito
+        return redirect()->route('auth.login')->with('success', '¡Registro exitoso! Ya puedes iniciar sesión.');
     }
 
     public function forgotPswd() {

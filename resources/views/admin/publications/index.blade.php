@@ -7,8 +7,8 @@
         <h1 class="text-4xl font-bold">Publicaciones Pendientes</h1>
     </div>
 
-    <div class="bg-gray-800 rounded-lg shadow-lg overflow-x-auto">
-        <table class="w-full text-left">
+    <div class="bg-gray-800 rounded-lg shadow-lg">
+        <table class="w-full min-w-[640px] text-left overflow-x-auto">
             <thead class="bg-gray-700">
                 <tr>
                     <th class="p-4">Título</th>

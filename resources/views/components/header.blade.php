@@ -39,6 +39,12 @@
                 @endguest
                 @auth
                     {{-- Tus enlaces de usuario autenticado aquí --}}
+                    <form action="{{ route('auth.logout') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="baloo-bhaijaan-2-medium w-full ...">
+                            Salir
+                        </button>
+                    </form>
                 @endauth
             </ul>
         </nav>

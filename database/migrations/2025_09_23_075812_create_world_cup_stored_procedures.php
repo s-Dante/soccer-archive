@@ -11,6 +11,7 @@ return new class extends Migration
     public function up(): void
     {
         // SP para obtener todos los mundiales
+        DB::unprepared('DROP PROCEDURE IF EXISTS sp_get_all_world_cups');
         DB::unprepared('
             CREATE PROCEDURE sp_get_all_world_cups()
             BEGIN
@@ -21,6 +22,7 @@ return new class extends Migration
         ');
 
         // SP para obtener un mundial por su año
+        DB::unprepared('DROP PROCEDURE IF EXISTS sp_get_world_cup_by_year');
         DB::unprepared('
             CREATE PROCEDURE sp_get_world_cup_by_year(IN p_year YEAR)
             BEGIN
@@ -31,6 +33,7 @@ return new class extends Migration
         ');
 
         // SP para obtener las publicaciones de un mundial específico
+        DB::unprepared('DROP PROCEDURE IF EXISTS sp_get_publications_by_world_cup');
         DB::unprepared('
             CREATE PROCEDURE sp_get_publications_by_world_cup(IN p_world_cup_id INT)
             BEGIN

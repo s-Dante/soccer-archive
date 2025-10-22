@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WorldCupController;
 use App\Http\Controllers\Api\PasswordValidationController;
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Request\RegisterUserRequest;
 
 /*
@@ -35,14 +36,14 @@ Route::prefix('auth')->name('auth.')->group(function () {
     Route::get('/register', fn () => view('auth.register'))->name('register.show');
 
     // Procesar formulario (POST)
-    Route::post('/register', [RegisterUserRequest::class, 'store'])->name('register');
+    Route::post('/register', RegisterController::class)->name('register');
     
     Route::view('/forgot-password', 'auth.forgot-pswd')->name('forgot');
     Route::view('/forgot-password/verify', 'auth.forgot-pswd-auth')->name('forgot.verify'); // Token de reseteo
     Route::view('/reset-password', 'auth.pswd-reset')->name('reset');
 
     // Ruta de logout (simulada por ahora)
-    Route::get('/logout', fn() => redirect('/'))->name('logout');
+    Route::post('/logout', fn() => redirect('/'))->name('logout');
 });
 
 

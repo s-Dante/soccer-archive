@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\RegisterUserRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -79,10 +80,18 @@ class AuthController extends Controller
     }
 
     // POST /auth/logout
-    public function logout(Request $request) {
+    public function logout(Request $request)
+    {
+        // 1. Cierra la sesión del usuario actual
         Auth::logout();
+
+        // 2. Invalida la sesión para evitar problemas de seguridad
         $request->session()->invalidate();
+
+        // 3. Regenera el token CSRF para la siguiente sesión
         $request->session()->regenerateToken();
+
+        // 4. Redirige al usuario a la página de inicio
         return redirect()->route('home');
     }
 }

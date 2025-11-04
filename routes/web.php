@@ -2,9 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WorldCupController;
-use App\Http\Controllers\Api\PasswordValidationController;
-// --- IMPORTAMOS EL CONTROLADOR CORRECTO ---
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AuthController; // Asegúrate de importar AuthController
+use App\Http\Controllers\UserController; // Asegúrate de importar UserController
 
 /*
 |--------------------------------------------------------------------------
@@ -18,37 +17,49 @@ Route::get('/world-cup/{year}', [WorldCupController::class, 'show'])->name('worl
 Route::view('/search', 'search')->name('search.index');
 
 
-// --- RUTAS DE AUTENTICACIÓN (CORREGIDAS) ---
+// --- RUTAS DE AUTENTICACIÓN (Flujo Completo) ---
 Route::prefix('auth')->name('auth.')->controller(AuthController::class)->group(function () {
     
     // Rutas de Login
-    Route::get('/login', 'login')->name('login'); // Muestra el formulario
-    Route::post('/login', 'loginAuth')->name('login.auth'); // Procesa el formulario
+    Route::get('/login', 'login')->name('login');
+    Route::post('/login', 'loginAuth')->name('login.auth');
 
     // Rutas de Registro
-    Route::get('/register', 'register')->name('register'); // Muestra el formulario
-    Route::post('/register', 'registerAuth')->name('register.auth'); // Procesa el formulario
+    Route::get('/register', 'register')->name('register');
+    Route::post('/register', 'registerAuth')->name('register.auth');
 
-    // Rutas de Olvidé Contraseña
-    Route::get('/forgot-password', 'forgotPswd')->name('forgot');
-    Route::post('/forgot-password', 'forgotPswdAuth')->name('forgot.auth');
-    Route::get('/reset-password/{token}', 'pswdReset')->name('reset');
-    // (Aquí faltaría la ruta POST para guardar la nueva contraseña)
+    // --- Flujo de Restablecimiento de Contraseña ---
+    
+    // 1. Mostrar formulario para pedir email
+    Route::get('/forgot-password', 'showForgotForm')->name('forgot.form');
+    // 2. Procesar el email y enviar el código
+    Route::post('/forgot-password', 'sendResetLink')->name('forgot.send');
+    
+    // 3. Mostrar formulario para ingresar el código
+    Route::get('/verify-token', 'showVerifyTokenForm')->name('token.form');
+    // 4. Procesar y verificar el código
+    Route::post('/verify-token', 'verifyToken')->name('token.verify');
+
+    // 5. Mostrar formulario para crear nueva contraseña
+    Route::get('/reset-password', 'showResetPasswordForm')->name('reset.form');
+    // 6. Guardar la nueva contraseña
+    Route::post('/reset-password', 'resetPassword')->name('reset.update');
+
+    // --- Fin del Flujo ---
 
     // Ruta de Logout
     Route::post('/logout', 'logout')->name('logout');
 });
 
 
-// --- RUTAS DEL PERFIL DE USUARIO ---
-Route::prefix('user')->name('user.')->group(function () {
-    Route::view('/profile', 'user.me')->name('me');
-    Route::view('/settings', 'user.settings')->name('settings');
-    Route::view('/contribute', 'user.contribute')->name('contribute');
+// --- RUTAS DEL PERFIL DE USUARIO (Protegidas) ---
+Route::prefix('user')->name('user.')->middleware('auth')->group(function () {
+    Route::get('/profile', [UserController::class, 'profile'])->name('me');
+    Route::get('/settings', [UserController::class, 'settings'])->name('settings');
+    Route::get('/contribute', [UserController::class, 'contribute'])->name('contribute');
 });
 
-
-// --- RUTAS DEL PANEL DE ADMINISTRADOR ---
+// --- RUTAS DEL PANEL DE ADMINISTRADOR (Aún públicas para demo) ---
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::view('/dashboard', 'admin.dashboard')->name('dashboard');
     Route::view('/publications', 'admin.publications.index')->name('publications.index');
@@ -59,6 +70,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::view('/comments', 'admin.comments.index')->name('comments.index');
 });
 
-
 // --- RUTAS PARA APIs EXTERNAS ---
 Route::view('/matches', 'matches.index')->name('matches.index');
+

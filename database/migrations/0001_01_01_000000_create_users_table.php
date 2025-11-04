@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->binary('profile_photo')->nullable();
+            $table->longText('profile_photo')->nullable()->charset('binary');
             $table->enum('role', ['user', 'admin'])->default('user');
             $table->enum('gender', ['male', 'female', 'prefer_not_to_say'])->nullable();
             $table->date('birthdate');

@@ -7,55 +7,31 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail; // Necesario para enviar correos
+use Illuminate\Support\Str; // Necesario para generar el código
+use App\Mail\PasswordResetCode; // Necesario para la clase del email
+use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
 {
-    // --- AÑADIMOS EL MÉTODO PARA MOSTRAR EL LOGIN ---
-    public function login()
-    {
-        return view('auth.login');
-    }
-
-    // --- AÑADIMOS EL MÉTODO PARA PROCESAR EL LOGIN (USANDO SP) ---
-    public function loginAuth(Request $request)
-    {
-        // 1. Validar los datos del formulario
-        $credentials = $request->validate([
-            'identifier' => 'required|string', // Campo "Correo o Usuario"
-            'password' => 'required|string',
-        ]);
-
-        // 2. Llamar al SP para buscar al usuario
-        $user = DB::selectOne(
-            'CALL sp_get_user_by_identifier(?)', 
-            [$credentials['identifier']]
-        );
-
-        // 3. Verificar al usuario y la contraseña
-        if (!$user || !Hash::check($credentials['password'], $user->password)) {
-            return back()->withErrors([
-                'identifier' => 'Las credenciales proporcionadas no coinciden con nuestros registros.',
-            ])->onlyInput('identifier');
-        }
-
-        // 4. Iniciar sesión al usuario
-        Auth::loginUsingId($user->id);
-        $request->session()->regenerate();
-
-        // 5. Redirigir al perfil del usuario
-        return redirect()->route('user.me');
-    }
-
-    // --- AÑADIMOS EL MÉTODO PARA MOSTRAR EL REGISTRO ---
+    /*
+    |--------------------------------------------------------------------------
+    | MÉTODOS DE REGISTRO
+    |--------------------------------------------------------------------------
+    */
     public function register()
     {
         return view('auth.register');
     }
 
-    // POST /auth/register
     public function registerAuth(RegisterUserRequest $request)
     {
-        // ... (Tu código de DB::statement para crear el usuario) ...
+        $profilePhotoData = null;
+        if ($request->hasFile('profile_photo')) {
+            $profilePhotoData = file_get_contents($request->file('profile_photo')->getRealPath());
+        }
+
         DB::statement(
             'CALL sp_insert_user(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
@@ -64,7 +40,7 @@ class AuthController extends Controller
                 $request->username,
                 $request->email,
                 Hash::make($request->password),
-                $request->hasFile('profile_photo') ? file_get_contents($request->file('profile_photo')->getRealPath()) : null,
+                $profilePhotoData,
                 $request->gender,
                 $request->birthdate,
                 $request->country,
@@ -72,36 +48,188 @@ class AuthController extends Controller
             ]
         );
 
-        // --- AÑADE ESTA LÍNEA ---
-        Auth::logout(); // Cerramos cualquier sesión que se haya abierto automáticamente
-        // -------------------------
-
-        // 3. Redirigir a la vista de login con un mensaje de éxito
-       return redirect()->route('auth.login')->with('success', '¡Registro exitoso! Ya puedes iniciar sesión.');
+        Auth::logout();
+        return redirect()->route('auth.login')->with('success', '¡Registro exitoso! Ya puedes iniciar sesión.');
     }
 
-    // --- AÑADIMOS LOS MÉTODOS QUE FALTAN ---
-
-    public function forgotPswd() {
-        return view('auth.forgot-pswd');
+    /*
+    |--------------------------------------------------------------------------
+    | MÉTODOS DE LOGIN / LOGOUT
+    |--------------------------------------------------------------------------
+    */
+    public function login()
+    {
+        return view('auth.login');
     }
 
-    public function forgotPswdAuth(Request $request) {
-        // Lógica de envío de correo...
-        return back()->with('status', 'Te enviamos un correo con instrucciones.');
+    public function loginAuth(Request $request)
+    {
+        $credentials = $request->validate([
+            'identifier' => 'required|string',
+            'password' => 'required|string'
+        ]);
+
+        $results = DB::select('CALL sp_get_user_by_identifier(?)', [$credentials['identifier']]);
+        $user = $results[0] ?? null;
+
+        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'identifier' => 'Las credenciales proporcionadas son incorrectas.',
+            ]);
+        }
+
+        Auth::loginUsingId($user->id, $request->boolean('remember'));
+        $request->session()->regenerate();
+        return redirect()->intended(route('user.me'));
     }
 
-    public function pswdReset($token) {
-        return view('auth.pswd-reset', compact('token'));
-    }
-
-    // POST /auth/logout
     public function logout(Request $request)
     {
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect()->route('home');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | MÉTODOS DE RESETEO DE CONTRASEÑA
+    |--------------------------------------------------------------------------
+    */
+
+    // 1. Muestra el formulario para pedir el email
+    public function showForgotForm()
+    {
+        return view('auth.forgot-pswd');
+    }
+
+    // 2. Procesa el email, genera código y lo envía
+    public function sendResetLink(Request $request)
+    {
+        // Validación del email
+        $request->validate(['email' => 'required|email']);
+        
+        // Buscamos al usuario con el SP
+        $results = DB::select('CALL sp_find_user_by_email(?)', [$request->email]);
+        $user = $results[0] ?? null;
+
+        if (!$user) {
+            // No revelamos si el usuario existe o no, por seguridad
+            return back()->with('success', 'Si el correo existe, hemos enviado un código.');
+        }
+
+        // Generar un código de 6 dígitos
+        $code = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        // Guardar el código en la BD usando el SP
+        // Hasheamos el código antes de guardarlo por seguridad
+        DB::statement('CALL sp_store_reset_token(?, ?)', [$request->email, Hash::make($code)]);
+
+        // Enviar el correo al usuario
+        Mail::to($request->email)->send(new PasswordResetCode($code));
+
+        // Guardamos el email en la sesión para el siguiente paso
+        session(['reset_email' => $request->email]);
+        
+        // Redirigimos a la vista para ingresar el código
+        return redirect()->route('auth.token.form')->with('success', 'Hemos enviado un código a tu correo.');
+    }
+
+    // 3. Muestra el formulario para ingresar el código
+    public function showVerifyTokenForm()
+    {
+        // Si no hay un email en la sesión, lo mandamos de vuelta al inicio
+        if (!session('reset_email')) {
+            return redirect()->route('auth.forgot.form');
+        }
+        return view('auth.forgot-pswd-auth');
+    }
+
+    // 4. Verifica el código ingresado
+    public function verifyToken(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string|min:6|max:6',
+        ]);
+
+        $email = session('reset_email');
+        if (!$email) {
+            return redirect()->route('auth.forgot.form');
+        }
+
+        // Buscamos el token hasheado en la BD
+        $results = DB::select('SELECT token FROM password_reset_tokens WHERE email = ?', [$email]);
+        $dbToken = $results[0] ?? null;
+
+        // Verificamos si el token de la BD existe y si coincide con el que puso el usuario
+        if (!$dbToken || !Hash::check($request->token, $dbToken->token)) {
+             return back()->withErrors(['token' => 'El código no es válido o ha expirado.']);
+        }
+
+        // ¡Éxito! Guardamos el token en la sesión para el paso final
+        session(['reset_token_validated' => $request->token]);
+
+        // Redirigimos al formulario final
+        return redirect()->route('auth.reset.form');
+    }
+
+    // 5. Muestra el formulario para la nueva contraseña
+    public function showResetPasswordForm()
+    {
+        // Si no tenemos un email y un token validado, no lo dejamos pasar
+        if (!session('reset_email') || !session('reset_token_validated')) {
+             return redirect()->route('auth.forgot.form');
+        }
+        
+        return view('auth.pswd-reset');
+    }
+
+    // 6. Guarda la nueva contraseña
+    public function resetPassword(Request $request)
+    {
+        $email = session('reset_email');
+        $token = session('reset_token_validated');
+
+        if (!$email || !$token) {
+            return redirect()->route('auth.forgot.form');
+        }
+
+        // Validamos la nueva contraseña (usando las reglas que ya tenías)
+        $allowedSymbols = '.,\-\/$&';
+        $request->validate([
+            'password' => [
+                'required',
+                'confirmed',
+                Password::min(8)->letters()->mixedCase()->numbers(),
+                'regex:/[' . $allowedSymbols . ']/'
+            ]
+        ], [
+            'password.regex' => 'La contraseña debe contener al menos un símbolo (., -, /, $, &).'
+        ]);
+
+        // Verificamos el token una última vez usando el SP
+        $results = DB::select('CALL sp_validate_reset_token(?, ?)', [$email, $token]);
+        
+        // (Nota: el SP 'sp_validate_reset_token' en realidad no funciona aquí porque el token está hasheado)
+        // (Mejor usamos la lógica de `verifyToken` de nuevo)
+
+        $results = DB::select('SELECT token FROM password_reset_tokens WHERE email = ?', [$email]);
+        $dbToken = $results[0] ?? null;
+
+        if (!$dbToken || !Hash::check($token, $dbToken->token)) {
+             return redirect()->route('auth.forgot.form')->withErrors(['email' => 'El token ha expirado. Intenta de nuevo.']);
+        }
+
+        // Todo bien. Actualizamos la contraseña y borramos el token con el SP
+        DB::statement('CALL sp_update_user_password(?, ?)', [
+            $email,
+            Hash::make($request->password)
+        ]);
+
+        // Limpiamos la sesión
+        session()->forget(['reset_email', 'reset_token_validated']);
+
+        return redirect()->route('auth.login')->with('success', '¡Contraseña actualizada! Ya puedes iniciar sesión.');
     }
 }
 

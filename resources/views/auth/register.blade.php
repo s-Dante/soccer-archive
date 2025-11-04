@@ -29,22 +29,23 @@
         <input type="email" name="email" placeholder="Correo" value="{{ old('email') }}" required class="w-full rounded-md bg-white/10 text-neutral-100 px-3 py-2 shadow-inner placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
 
         {{-- CONTRASEÑA Y VALIDACIÓN --}}
+        {{-- Nota: Estos campos NO usan value="old(...)" por seguridad --}}
         <input type="password" id="password" name="password" placeholder="Contraseña" required class="w-full rounded-md bg-white/10 text-neutral-100 px-3 py-2 shadow-inner placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
         <div id="password-feedback" class="text-xs space-y-1 text-neutral-400">
             <p id="min-length"> Mínimo 8 caracteres</p>
             <p id="mixed-case"> Mayúsculas y minúsculas</p>
             <p id="numbers"> Al menos un número</p>
-            <p id="symbols"> Al menos un caracter especial</p>
+            <p id="symbols"> Al menos uno de estos: ., -, /, $, &</p>
         </div>
         <input type="password" name="password_confirmation" placeholder="Confirmar Contraseña" required class="w-full rounded-md bg-white/10 text-neutral-100 px-3 py-2 shadow-inner placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
         
         {{-- GÉNERO Y FECHA DE NACIMIENTO --}}
         <div class="flex flex-col sm:flex-row gap-4">
             <select name="gender" required class="flex-1 w-full rounded-md bg-white/10 text-neutral-100 px-3 py-2 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="" disabled selected>Género</option>
-                <option value="male">Masculino</option>
-                <option value="female">Femenino</option>
-                <option value="prefer_not_to_say">Prefiero no decir</option>
+                <option value="" disabled {{ old('gender') ? '' : 'selected' }}>Género</option>
+                <option value="male" {{ old('gender') == 'male' ? 'selected' : '' }}>Masculino</option>
+                <option value="female" {{ old('gender') == 'female' ? 'selected' : '' }}>Femenino</option>
+                <option value="prefer_not_to_say" {{ old('gender') == 'prefer_not_to_say' ? 'selected' : '' }}>Prefiero no decir</option>
             </select>
             <input type="date" name="birthdate" title="Fecha de Nacimiento" value="{{ old('birthdate') }}" required class="flex-1 w-full rounded-md bg-white/10 text-neutral-100 px-3 py-2 shadow-inner placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
         </div>
@@ -69,6 +70,8 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const passwordInput = document.getElementById('password');
+            if (!passwordInput) return; // Asegurarse de que el input exista
+            
             const feedbackElements = {
                 min: document.getElementById('min-length'),
                 mixedCase: document.getElementById('mixed-case'),
@@ -80,7 +83,6 @@
             const updateFeedbackUI = (rule, isValid) => {
                 const el = feedbackElements[rule];
                 if (!el) return;
-
                 const validIcon = '✓';
                 const invalidIcon = '✗';
                 

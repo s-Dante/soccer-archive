@@ -12,13 +12,15 @@ class PasswordValidationController extends Controller
     public function validatePassword(Request $request)
     {
         $password = $request->input('password', '');
+        $allowedSymbolsRegex = '/[.,\-\/$&]/';
+        
         $errors = [];
         $rules = [
             'min' => strlen($password) >= 8,
             'letters' => preg_match('/[a-zA-Z]/', $password),
             'mixedCase' => preg_match('/[a-z]/', $password) && preg_match('/[A-Z]/', $password),
             'numbers' => preg_match('/[0-9]/', $password),
-            'symbols' => preg_match('/[\W_]/', $password), // Caracteres no alfanuméricos
+            'symbols' => preg_match($allowedSymbolsRegex, $password), // Caracteres no alfanuméricos
         ];
 
         if (!$rules['min']) $errors[] = 'Debe tener al menos 8 caracteres.';

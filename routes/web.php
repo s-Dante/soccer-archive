@@ -3,47 +3,40 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WorldCupController;
 use App\Http\Controllers\Api\PasswordValidationController;
-use App\Http\Controllers\Auth\RegisterController;
-use App\Http\Request\RegisterUserRequest;
+// --- IMPORTAMOS EL CONTROLADOR CORRECTO ---
+use App\Http\Controllers\AuthController;
 
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-|
-| Aquí registramos todas las rutas web para la aplicación.
-| Por ahora, todas son accesibles públicamente para demostración.
-|
 */
 
 // --- RUTAS PÚBLICAS Y PRINCIPALES ---
-
-// Página de inicio con el carrusel de mundiales
 Route::get('/', [WorldCupController::class, 'index'])->name('home');
-
-// Página de detalle de un mundial (infografía)
 Route::get('/world-cup/{year}', [WorldCupController::class, 'show'])->name('worldcup.show');
-
-// Página de resultados de búsqueda
 Route::view('/search', 'search')->name('search.index');
 
 
-// --- RUTAS DE AUTENTICACIÓN (Formularios) ---
-Route::prefix('auth')->name('auth.')->group(function () {
-    Route::view('/login', 'auth.login')->name('login');
-    Route::view('/login/verify', 'auth.login-auth')->name('login.verify'); // Token 2FA
-
-    Route::get('/register', fn () => view('auth.register'))->name('register.show');
-
-    // Procesar formulario (POST)
-    Route::post('/register', RegisterController::class)->name('register');
+// --- RUTAS DE AUTENTICACIÓN (CORREGIDAS) ---
+Route::prefix('auth')->name('auth.')->controller(AuthController::class)->group(function () {
     
-    Route::view('/forgot-password', 'auth.forgot-pswd')->name('forgot');
-    Route::view('/forgot-password/verify', 'auth.forgot-pswd-auth')->name('forgot.verify'); // Token de reseteo
-    Route::view('/reset-password', 'auth.pswd-reset')->name('reset');
+    // Rutas de Login
+    Route::get('/login', 'login')->name('login'); // Muestra el formulario
+    Route::post('/login', 'loginAuth')->name('login.auth'); // Procesa el formulario
 
-    // Ruta de logout (simulada por ahora)
-    Route::post('/logout', fn() => redirect('/'))->name('logout');
+    // Rutas de Registro
+    Route::get('/register', 'register')->name('register'); // Muestra el formulario
+    Route::post('/register', 'registerAuth')->name('register.auth'); // Procesa el formulario
+
+    // Rutas de Olvidé Contraseña
+    Route::get('/forgot-password', 'forgotPswd')->name('forgot');
+    Route::post('/forgot-password', 'forgotPswdAuth')->name('forgot.auth');
+    Route::get('/reset-password/{token}', 'pswdReset')->name('reset');
+    // (Aquí faltaría la ruta POST para guardar la nueva contraseña)
+
+    // Ruta de Logout
+    Route::post('/logout', 'logout')->name('logout');
 });
 
 

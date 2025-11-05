@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\WorldCupController;
+use App\Http\Controllers\Admin\WorldCupController;
 use App\Http\Controllers\AuthController; // Asegúrate de importar AuthController
 use App\Http\Controllers\UserController; // Asegúrate de importar UserController
 
@@ -60,11 +60,19 @@ Route::prefix('user')->name('user.')->middleware('auth')->group(function () {
 });
 
 // --- RUTAS DEL PANEL DE ADMINISTRADOR (Aún públicas para demo) ---
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
+    
     Route::view('/dashboard', 'admin.dashboard')->name('dashboard');
+
+    // --- ¡RUTAS DE MUNDIALES CORREGIDAS! ---
+    // Apuntan al controlador en lugar de a la vista directamente
+    Route::get('/worldcups', [WorldCupController::class, 'index'])->name('worldcups.index');
+    Route::get('/worldcups/create', [WorldCupController::class, 'create'])->name('worldcups.create');
+    Route::post('/worldcups', [WorldCupController::class, 'store'])->name('worldcups.store');
+    // (Aquí irán las rutas de edit, update, delete)
+
+    // Rutas que aún son estáticas (por ahora)
     Route::view('/publications', 'admin.publications.index')->name('publications.index');
-    Route::view('/worldcups', 'admin.worldcups.index')->name('worldcups.index');
-    Route::view('/worldcups/create', 'admin.worldcups.create')->name('worldcups.create');
     Route::view('/categories', 'admin.categories.index')->name('categories.index');
     Route::view('/users', 'admin.users.index')->name('users.index');
     Route::view('/comments', 'admin.comments.index')->name('comments.index');

@@ -80,7 +80,15 @@ class AuthController extends Controller
 
         Auth::loginUsingId($user->id, $request->boolean('remember'));
         $request->session()->regenerate();
-        return redirect()->intended(route('user.me'));
+        
+        // 5. REDIRIGIR SEGÚN EL ROL (¡ESTE ES EL CAMBIO!)
+        if ($user->role === 'admin') {
+            // Si es admin, al dashboard de admin
+            return redirect()->route('admin.dashboard');
+        } else {
+            // Si es usuario normal, a su perfil
+            return redirect()->route('user.me');
+        }
     }
 
     public function logout(Request $request)
@@ -88,7 +96,7 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect()->route('home');
+        return redirect()->route('auth.login');
     }
 
     /*

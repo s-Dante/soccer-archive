@@ -28,6 +28,14 @@
                 <a href="{{ route('admin.categories.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-700 transition"><span>🗂️</span> Categorías</a>
                 <a href="{{ route('admin.users.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-700 transition"><span>👥</span> Usuarios</a>
                 <a href="{{ route('admin.comments.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-700 transition"><span>💬</span> Comentarios</a>
+                
+               <form action="{{ route('auth.logout') }}" method="POST" class="w-full">
+                     @csrf
+                    <button type="submit" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-700 transition w-full text-left">
+                        <span>🚪</span> Salir
+                    </button>
+                </form>
+
             </nav>
         </aside>
 

@@ -18,7 +18,8 @@ return new class extends Migration
             BEGIN
                 SELECT 
                     id, 
-                    password 
+                    password,
+                    role
                 FROM users 
                 WHERE (email = p_identifier COLLATE utf8mb4_unicode_ci) OR 
                     (username = p_identifier COLLATE utf8mb4_unicode_ci)

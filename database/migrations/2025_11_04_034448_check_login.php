@@ -19,7 +19,8 @@ return new class extends Migration
                 SELECT 
                     id, 
                     password,
-                    role
+                    role,
+                    deleted_at
                 FROM users 
                 WHERE (email = p_identifier COLLATE utf8mb4_unicode_ci) OR 
                     (username = p_identifier COLLATE utf8mb4_unicode_ci)

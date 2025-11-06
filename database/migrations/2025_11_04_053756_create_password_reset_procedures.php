@@ -43,15 +43,15 @@ return new class extends Migration
         DB::unprepared('DROP PROCEDURE IF EXISTS sp_validate_reset_token');
         DB::unprepared('
             CREATE PROCEDURE sp_validate_reset_token(
-                IN p_email VARCHAR(255),
-                IN p_token VARCHAR(255)
+            IN p_email VARCHAR(255),
+            IN p_token VARCHAR(255)
             )
             BEGIN
-                SELECT email 
-                FROM password_reset_tokens 
-                WHERE (email = p_email COLLATE utf8mb4_unicode_ci) AND 
-                      (token = p_token) AND
-                      (created_at > (NOW() - INTERVAL 10 MINUTE)) -- Válido solo por 10 minutos
+                SELECT email
+                FROM password_reset_tokens
+                WHERE email = p_email COLLATE utf8mb4_unicode_ci -- Se eliminó el COLLATE explícito aquí
+                AND token = p_token COLLATE utf8mb4_unicode_ci
+                AND created_at > (NOW() - INTERVAL 10 MINUTE)
                 LIMIT 1;
             END
         ');
@@ -65,17 +65,33 @@ return new class extends Migration
             )
             BEGIN
                 -- Actualiza la contraseña en la tabla de usuarios
-                UPDATE users 
-                SET password = p_password 
+                UPDATE users
+                SET password = p_password
                 WHERE email = p_email COLLATE utf8mb4_unicode_ci;
-                
+
                 -- Borra el token usado
-                DELETE FROM password_reset_tokens 
+                DELETE FROM password_reset_tokens
                 WHERE email = p_email COLLATE utf8mb4_unicode_ci;
             END
         ');
+
+        DB::unprepared('DROP PROCEDURE IF EXISTS sp_get_reset_token');
+        DB::unprepared('
+            CREATE PROCEDURE sp_get_reset_token(
+                IN p_email VARCHAR(255)
+            )
+            BEGIN
+                SELECT token
+                FROM password_reset_tokens
+                WHERE email = p_email COLLATE utf8mb4_unicode_ci
+                LIMIT 1;
+            END
+        ');
+
+
     }
 
+    
     /**
      * Reverse the migrations.
      */
@@ -85,5 +101,6 @@ return new class extends Migration
         DB::unprepared('DROP PROCEDURE IF EXISTS sp_store_reset_token');
         DB::unprepared('DROP PROCEDURE IF EXISTS sp_validate_reset_token');
         DB::unprepared('DROP PROCEDURE IF EXISTS sp_update_user_password');
+        DB::unprepared('DROP PROCEDURE IF EXISTS sp_get_reset_token');
     }
 };

@@ -1,18 +1,13 @@
 @extends('layouts.admin')
 
-@section('title', 'Gestionar Mundiales')
+@section('title', 'Gestionar Usuarios')
 
 @section('content')
-    
-    {{-- Encabezado de la página con el botón de "Añadir" --}}
     <div class="flex justify-between items-center mb-8">
-        <h1 class="text-4xl font-bold">Mundiales</h1>
-        <a href="{{ route('admin.worldcups.create') }}" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition">
-            Añadir Mundial
-        </a>
+        <h1 class="text-4xl font-bold">Usuarios Registrados</h1>
     </div>
 
-    {{-- Mensaje de éxito --}}
+    {{-- Mensajes de éxito o error --}}
     @if (session('success'))
         <div class="bg-green-500/20 border border-green-500/30 text-green-300 text-sm rounded-md p-3 mb-6">
             {{ session('success') }}
@@ -28,25 +23,37 @@
         </div>
     @endif
 
-    {{-- Contenedor de la tabla --}}
     <div class="bg-gray-800 rounded-lg shadow-lg overflow-x-auto">
-        <table class="w-full min-w-[700px] text-left"> {{-- Aumentamos el min-w --}}
+        <table class="w-full min-w-[700px] text-left">
             <thead class="bg-gray-700">
                 <tr>
-                    <th class="p-4">Año</th>
-                    <th class="p-4">Sede (País)</th>
-                    <th class="p-4">Estatus</th> {{-- <-- NUEVA COLUMNA --}}
+                    <th class="p-4">Nombre Completo</th>
+                    <th class="p-4">Usuario</th>
+                    <th class="p-4">Email</th>
+                    <th class="p-4">Rol</th>
+                    <th class="p-4">Estatus</th>
                     <th class="p-4 text-center">Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse ($worldCups as $wc)
+                @forelse ($users as $user)
                     <tr class="border-b border-gray-700 hover:bg-gray-700/50">
-                        <td class="p-4 font-medium">{{ $wc->year }}</td>
-                        <td class="p-4">{{ $wc->host_country }}</td>
+                        <td class="p-4 font-medium">{{ $user->name }} {{ $user->last_name }}</td>
+                        <td class="p-4 text-gray-400">{{ $user->username }}</td>
+                        <td class="p-4 text-gray-400">{{ $user->email }}</td>
                         <td class="p-4">
-                            {{-- --- LÓGICA DE ESTATUS --- --}}
-                            @if($wc->deleted_at)
+                            @if($user->role == 'admin')
+                                <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-purple-400 bg-purple-800/50">
+                                    {{ $user->role }}
+                                </span>
+                            @else
+                                <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-gray-400 bg-gray-600/50">
+                                    {{ $user->role }}
+                                </span>
+                            @endif
+                        </td>
+                        <td class="p-4">
+                            @if($user->deleted_at)
                                 <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-red-400 bg-red-800/50">
                                     Inactivo
                                 </span>
@@ -55,15 +62,12 @@
                                     Activo
                                 </span>
                             @endif
-                            {{-- ------------------------- --}}
                         </td>
                         <td class="p-4">
-                            {{-- --- ACCIONES (ACTUALIZADO) --- --}}
                             <div class="flex justify-center gap-4">
-
-                                @if($wc->deleted_at)
+                                @if($user->deleted_at)
                                     {{-- Botón para REACTIVAR (PATCH) --}}
-                                    <form action="{{ route('admin.worldcups.restore', $wc->id) }}" method="POST">
+                                    <form action="{{ route('admin.users.restore', $user->id) }}" method="POST">
                                         @csrf
                                         @method('PATCH')
                                         <button type="submit" class="text-green-400 hover:text-green-300 transition-colors" title="Reactivar">
@@ -71,27 +75,22 @@
                                         </button>
                                     </form>
                                 @else
-                                    {{-- Botones para EDITAR y DAR DE BAJA --}}
-                                    <a href="{{ route('admin.worldcups.edit', $wc->id) }}" class="text-blue-400 hover:text-blue-300 transition-colors" title="Editar">
-                                        Editar
-                                    </a>
-                                    
-                                    <form action="{{ route('admin.worldcups.destroy', $wc->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres dar de baja este mundial? Se darán de baja TODAS sus publicaciones asociadas.');">
+                                    {{-- Botón para DAR DE BAJA (DELETE) --}}
+                                    <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres dar de baja a este usuario?');">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="text-red-500 hover:text-red-400 transition-colors" title="Borrar">
+                                        <button type="submit" class="text-red-500 hover:text-red-400 transition-colors" title="Dar de Baja">
                                             Dar de Baja
                                         </button>
                                     </form>
                                 @endif
                             </div>
-                            {{-- ----------------------------- --}}
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="p-4 text-center text-gray-400"> {{-- colspan a 4 --}}
-                            Aún no se ha creado ningún mundial.
+                        <td colspan="6" class="p-4 text-center text-gray-400">
+                            No hay usuarios registrados.
                         </td>
                     </tr>
                 @endforelse

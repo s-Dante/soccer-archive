@@ -17,6 +17,7 @@ return new class extends Migration
             BEGIN
                 SELECT id, year, host_country, description, cover_image
                 FROM world_cups
+                WHERE deleted_at IS NULL 
                 ORDER BY year ASC;
             END
         ');
@@ -28,7 +29,8 @@ return new class extends Migration
             BEGIN
                 SELECT id, year, host_country, description, cover_image, ball_image
                 FROM world_cups
-                WHERE year = p_year;
+                WHERE year = p_year
+                AND deleted_at IS NULL;
             END
         ');
 
@@ -47,6 +49,7 @@ return new class extends Migration
                 JOIN users u ON p.user_id = u.id
                 WHERE p.world_cup_id = p_world_cup_id
                 AND p.status = \'accepted\' -- Solo mostramos las aceptadas
+                AND p.deleted_at IS NULL
                 ORDER BY p.published_at DESC;
             END
         ');

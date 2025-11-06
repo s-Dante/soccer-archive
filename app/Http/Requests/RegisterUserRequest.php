@@ -47,8 +47,9 @@ class RegisterUserRequest extends FormRequest
             ],
             'gender' => 'required|string|in:male,female,prefer_not_to_say',
             'birthdate' => "required|date|before_or_equal:$minAge",
-            'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // 2MB Max
+            'profile_photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'], // 2MB Max
             'country' => 'required|string|max:255',
+            
         ];
     }
 
@@ -59,6 +60,7 @@ class RegisterUserRequest extends FormRequest
             'birthdate.before_or_equal' => 'Debes tener al menos 12 años para registrarte.',
             'password.regex' => 'La contraseña debe contener al menos un símbolo especial (., -, /, $, &).',
             'email.regex' => 'Por favor, introduce una dirección de correo válida (ej. usuario@dominio.com).',
+            'profile_photo.max' => 'La imagen no puede pesar más de 2 MB.',
         ];
     }
 }

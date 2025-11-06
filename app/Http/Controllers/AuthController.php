@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Repositories\UserRepository;
 use App\Http\Requests\RegisterUserRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,6 +21,15 @@ class AuthController extends Controller
     | MÉTODOS DE REGISTRO
     |--------------------------------------------------------------------------
     */
+    protected $repository;
+
+    // Inyección de dependencias: Laravel nos da el repositorio automáticamente
+    public function __construct(UserRepository $repository)
+    {
+        $this->repository = $repository;
+    }
+
+
     public function register()
     {
         return view('auth.register');
@@ -27,26 +37,33 @@ class AuthController extends Controller
 
     public function registerAuth(RegisterUserRequest $request)
     {
-        $profilePhotoData = null;
-        if ($request->hasFile('profile_photo')) {
-            $profilePhotoData = file_get_contents($request->file('profile_photo')->getRealPath());
-        }
+        $data = $request->all();
 
-        DB::statement(
-            'CALL sp_insert_user(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [
-                $request->name,
-                $request->last_name,
-                $request->username,
-                $request->email,
-                Hash::make($request->password),
-                $profilePhotoData,
-                $request->gender,
-                $request->birthdate,
-                $request->country,
-                'user'
-            ]
-        );
+        if ($request->hasFile('profile_photo')) {
+            $data['profile_photo'] = file_get_contents($request->file('profile_photo')->getRealPath());
+        }
+        
+        // $profilePhotoData = null;
+        // if ($request->hasFile('profile_photo')) {
+        //     $profilePhotoData = file_get_contents($request->file('profile_photo')->getRealPath());
+        // }
+
+        $this->repository->create($data);
+        // DB::statement(
+        //     'CALL sp_insert_user(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        //     [
+        //         $request->name,
+        //         $request->last_name,
+        //         $request->username,
+        //         $request->email,
+        //         Hash::make($request->password),
+        //         $profilePhotoData,
+        //         $request->gender,
+        //         $request->birthdate,
+        //         $request->country,
+        //         'user'
+        //     ]
+        // );
 
         Auth::logout();
         return redirect()->route('auth.login')->with('success', '¡Registro exitoso! Ya puedes iniciar sesión.');
@@ -69,8 +86,10 @@ class AuthController extends Controller
             'password' => 'required|string'
         ]);
 
-        $results = DB::select('CALL sp_get_user_by_identifier(?)', [$credentials['identifier']]);
-        $user = $results[0] ?? null;
+        $user = $this->repository->findByIdentifier($credentials['identifier']);
+
+        //$results = DB::select('CALL sp_get_user_by_identifier(?)', [$credentials['identifier']]);
+        //$user = $results[0] ?? null;
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             throw ValidationException::withMessages([
@@ -78,6 +97,13 @@ class AuthController extends Controller
             ]);
         }
 
+        if ($user->deleted_at !== null) {
+            // El usuario está "borrado", le mandamos un error específico.
+            throw ValidationException::withMessages([
+                'identifier' => 'Tu cuenta ha sido dada de baja por un administrador.',
+            ]);
+        }
+        
         Auth::loginUsingId($user->id, $request->boolean('remember'));
         $request->session()->regenerate();
         
@@ -118,8 +144,9 @@ class AuthController extends Controller
         $request->validate(['email' => 'required|email']);
         
         // Buscamos al usuario con el SP
-        $results = DB::select('CALL sp_find_user_by_email(?)', [$request->email]);
-        $user = $results[0] ?? null;
+        $user = $this->repository->findByEmail($request->email);
+        //$results = DB::select('CALL sp_find_user_by_email(?)', [$request->email]);
+        //$user = $results[0] ?? null;
 
         if (!$user) {
             // No revelamos si el usuario existe o no, por seguridad
@@ -131,7 +158,8 @@ class AuthController extends Controller
 
         // Guardar el código en la BD usando el SP
         // Hasheamos el código antes de guardarlo por seguridad
-        DB::statement('CALL sp_store_reset_token(?, ?)', [$request->email, Hash::make($code)]);
+        $this->repository->storeResetToken($request->email, Hash::make($code));
+        //DB::statement('CALL sp_store_reset_token(?, ?)', [$request->email, Hash::make($code)]);
 
         // Enviar el correo al usuario
         Mail::to($request->email)->send(new PasswordResetCode($code));
@@ -166,8 +194,9 @@ class AuthController extends Controller
         }
 
         // Buscamos el token hasheado en la BD
-        $results = DB::select('SELECT token FROM password_reset_tokens WHERE email = ?', [$email]);
-        $dbToken = $results[0] ?? null;
+        $dbToken = $this->repository->getResetToken($email);
+        //$results = DB::select('SELECT token FROM password_reset_tokens WHERE email = ?', [$email]);
+        //$dbToken = $results[0] ?? null;
 
         // Verificamos si el token de la BD existe y si coincide con el que puso el usuario
         if (!$dbToken || !Hash::check($request->token, $dbToken->token)) {
@@ -216,23 +245,26 @@ class AuthController extends Controller
         ]);
 
         // Verificamos el token una última vez usando el SP
-        $results = DB::select('CALL sp_validate_reset_token(?, ?)', [$email, $token]);
+        $results = $this->repository->validateResetToken($email, $token);
+        //$results = DB::select('CALL sp_validate_reset_token(?, ?)', [$email, $token]);
         
         // (Nota: el SP 'sp_validate_reset_token' en realidad no funciona aquí porque el token está hasheado)
         // (Mejor usamos la lógica de `verifyToken` de nuevo)
 
-        $results = DB::select('SELECT token FROM password_reset_tokens WHERE email = ?', [$email]);
-        $dbToken = $results[0] ?? null;
+        $dbToken = $this->repository->getResetToken($email);
+        //$results = DB::select('SELECT token FROM password_reset_tokens WHERE email = ?', [$email]);
+        //$dbToken = $results[0] ?? null;
 
         if (!$dbToken || !Hash::check($token, $dbToken->token)) {
              return redirect()->route('auth.forgot.form')->withErrors(['email' => 'El token ha expirado. Intenta de nuevo.']);
         }
 
         // Todo bien. Actualizamos la contraseña y borramos el token con el SP
-        DB::statement('CALL sp_update_user_password(?, ?)', [
-            $email,
-            Hash::make($request->password)
-        ]);
+        $this->repository->updatePassword($email, Hash::make($request->password));
+        // DB::statement('CALL sp_update_user_password(?, ?)', [
+        //     $email,
+        //     Hash::make($request->password)
+        // ]);
 
         // Limpiamos la sesión
         session()->forget(['reset_email', 'reset_token_validated']);

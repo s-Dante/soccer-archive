@@ -9,22 +9,25 @@
         {{-- Card de Publicaciones Pendientes --}}
         <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
             <h3 class="text-xl font-semibold mb-2">Publicaciones Pendientes</h3>
-            <p class="text-5xl font-bold text-yellow-400">12</p> {{-- Dato de ejemplo --}}
-            <a href="{{-- route('admin.publications.index') --}}" class="mt-4 inline-block text-blue-400 hover:underline">Revisar ahora &rarr;</a>
+            {{-- Mostramos el dato real --}}
+            <p class="text-5xl font-bold text-yellow-400">{{ $stats->pending_publications ?? 0 }}</p>
+            <a href="{{ route('admin.publications.index') }}" class="mt-4 inline-block text-blue-400 hover:underline">Revisar ahora &rarr;</a>
         </div>
 
         {{-- Card de Usuarios Registrados --}}
         <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
             <h3 class="text-xl font-semibold mb-2">Usuarios Registrados</h3>
-            <p class="text-5xl font-bold text-green-400">152</p> {{-- Dato de ejemplo --}}
-            <a href="{{-- route('admin.users.index') --}}" class="mt-4 inline-block text-blue-400 hover:underline">Gestionar usuarios &rarr;</a>
+            {{-- Mostramos el dato real --}}
+            <p class="text-5xl font-bold text-green-400">{{ $stats->total_users ?? 0 }}</p>
+            <a href="{{ route('admin.users.index') }}" class="mt-4 inline-block text-blue-400 hover:underline">Gestionar usuarios &rarr;</a>
         </div>
 
         {{-- Card de Mundiales Creados --}}
         <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
             <h3 class="text-xl font-semibold mb-2">Mundiales en la BD</h3>
-            <p class="text-5xl font-bold text-purple-400">22</p> {{-- Dato de ejemplo --}}
-            <a href="{{-- route('admin.worldcups.index') --}}" class="mt-4 inline-block text-blue-400 hover:underline">Ver mundiales &rarr;</a>
+            {{-- Mostramos el dato real --}}
+            <p class="text-5xl font-bold text-purple-400">{{ $stats->total_world_cups ?? 0 }}</p>
+            <a href="{{ route('admin.worldcups.index') }}" class="mt-4 inline-block text-blue-400 hover:underline">Ver mundiales &rarr;</a>
         </div>
     </div>
 @endsection

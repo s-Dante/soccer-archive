@@ -3,90 +3,125 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB; // <-- Asegúrate de que esto esté importado
+use App\Repositories\WorldCupRepository;
+use App\Http\Requests\Admin\StoreWorldCupRequest; // <-- 1. IMPORTAMOS el nuevo Request
+use App\Http\Requests\Admin\UpdateWorldCupRequest; // <-- 1. IMPORTAMOS el nuevo Request
+use App\Services\CountryService; // <-- Paises
 
 class WorldCupController extends Controller
 {
-    /**
-     * Muestra la lista de todos los mundiales (admin/worldcups/index).
-     * ¡ESTE ES EL MÉTODO QUE CAUSA EL ERROR!
-     */
+    protected $repository;
+    protected $countryService;
+
+    // Inyección de dependencias: Laravel nos da el repositorio automáticamente
+    public function __construct(WorldCupRepository $repository, CountryService $countryService)
+    {
+        $this->repository = $repository;
+        // --- CORRECCIÓN AQUÍ ---
+        $this->countryService = $countryService;
+    }
+
     public function index()
     {
-        // 1. Obtener los datos de los mundiales para el carrusel
-        $worldCups = DB::select('CALL sp_get_all_world_cups()');
-        
-        // 2. Simplemente mostrar la vista
-        // (Sin ninguna redirección basada en el rol)
-        return view('welcome', ['worldCups' => $worldCups]);
+        // --- 2. CAMBIO DE MÉTODO ---
+        // Llama al método explícito de admin
+        $worldCups = $this->repository->getForAdminIndex();
+        // --------------------------
+
+        return view('admin.worldcups.index', compact('worldCups'));
     }
 
     /**
-     * Muestra el formulario para crear un nuevo mundial (admin/worldcups/create).
+     * Muestra el formulario para crear un nuevo mundial.
+     * (Lo añadimos para que la ruta 'admin.worldcups.create' funcione)
      */
     public function create()
     {
-        // Este método no pasa ninguna variable, por eso la vista 'create' no da error.
-        return view('admin.worldcups.create');
+        // --- ¡ESTA ES LA LÍNEA QUE FALTABA! ---
+        // --- Y CORRECCIÓN AQUÍ ---
+        $countries = $this->countryService->getCountryList();
+        
+        // --- Y AQUÍ LA PASAMOS A LA VISTA ---
+        return view('admin.worldcups.create', compact('countries'));
     }
 
     /**
      * Guarda el nuevo mundial en la BD.
      */
-    public function store(Request $request)
+    // --- 3. CAMBIAMOS Request POR StoreWorldCupRequest ---
+    public function store(StoreWorldCupRequest $request)
     {
-        // 1. Validar los datos del formulario
-        $request->validate([
-            'year' => 'required|numeric|unique:world_cups,year',
-            'host_country' => 'required|string|max:255',
-            'description' => 'required|string',
-            'cover_image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // 2MB Max
-            'ball_image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // 2MB Max
-        ]);
+        // 4. ¡La validación se fue! Ahora solo obtenemos los datos validados.
+        $data = $request->validated();
 
-        // 2. Convertir imágenes a BLOB
-        $coverImage = $request->hasFile('cover_image') 
-                      ? file_get_contents($request->file('cover_image')->getRealPath()) 
-                      : null;
+        // 5. Preparamos los datos de las imágenes (esta lógica se queda aquí)
+        $data['cover_image'] = $request->hasFile('cover_image') 
+                             ? file_get_contents($request->file('cover_image')->getRealPath()) 
+                             : null;
         
-        $ballImage = $request->hasFile('ball_image') 
-                     ? file_get_contents($request->file('ball_image')->getRealPath()) 
-                     : null;
+        $data['ball_image'] = $request->hasFile('ball_image') 
+                            ? file_get_contents($request->file('ball_image')->getRealPath()) 
+                            : null;
 
-        // 3. Llamar al Stored Procedure para insertar
-        DB::statement(
-            'CALL sp_admin_create_world_cup(?, ?, ?, ?, ?)',
-            [
-                $request->year,
-                $request->host_country,
-                $request->description,
-                $coverImage,
-                $ballImage
-            ]
-        );
+        $this->repository->create($data);
 
-        // 4. Redirigir de vuelta al índice con un mensaje de éxito
-        return redirect()->route('admin.worldcups.index')->with('success', 'Mundial creado exitosamente.');
+        return redirect()->route('admin.worldcups.index')
+                         ->with('success', 'Mundial creado exitosamente.');
     }
-    
-    public function show(string $year)
-    {
-        // ... tu lógica para mostrar un mundial ...
-        $results = DB::select('CALL sp_get_world_cup_by_year(?)', [$year]);
-        $worldCup = $results[0] ?? null;
 
+    public function edit(int $id)
+    {
+        $worldCup = $this->repository->getById($id);
         if (!$worldCup) {
-            abort(404);
+            return redirect()->route('admin.worldcups.index')->withErrors('Mundial no encontrado.');
         }
         
-        $publications = DB::select('CALL sp_get_publications_by_world_cup(?)', [$worldCup->id]);
-
-        return view('world-cup', [
-            'worldCup' => $worldCup,
-            'publications' => $publications
-        ]);
+        $countries = $this->countryService->getCountryList();
+        
+        return view('admin.worldcups.edit', compact('worldCup', 'countries'));
     }
 
-    // ... (Aquí irán los métodos edit, update, destroy) ...
+
+    // --- 3. MÉTODO NUEVO PARA ACTUALIZAR EN LA BD ---
+    public function update(UpdateWorldCupRequest $request, int $id)
+    {
+        // 1. Validamos y obtenemos los datos de texto (y opcionalmente de imagen)
+        $data = $request->validated(); 
+
+        // 2. Actualizamos los datos de texto (año, sede, descripción)
+        $this->repository->update($id, $data);
+
+        // 3. Verificamos si se subió una nueva imagen de portada
+        if ($request->hasFile('cover_image')) {
+            $coverImageData = file_get_contents($request->file('cover_image')->getRealPath());
+            $this->repository->updateCoverImage($id, $coverImageData);
+        }
+        
+        // 4. Verificamos si se subió una nueva imagen de balón
+        if ($request->hasFile('ball_image')) {
+            $ballImageData = file_get_contents($request->file('ball_image')->getRealPath());
+            $this->repository->updateBallImage($id, $ballImageData);
+        }
+
+        return redirect()->route('admin.worldcups.index')
+                         ->with('success', 'Mundial actualizado exitosamente.');
+    }
+
+    // --- 4. MÉTODO NUEVO PARA BORRAR (BAJA LÓGICA) ---
+    public function destroy(int $id)
+    {
+        $this->repository->delete($id);
+
+        return redirect()->route('admin.worldcups.index')
+                         ->with('success', 'Mundial dado de baja exitosamente (junto con sus publicaciones).');
+    }
+
+    public function restore(int $id)
+    {
+        $this->repository->restore($id);
+
+        return redirect()->route('admin.worldcups.index')
+                         ->with('success', 'Mundial reactivado exitosamente.');
+    }
 }
+

@@ -1,10 +1,15 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\WorldCupController;
 use App\Http\Controllers\AuthController; // Asegúrate de importar AuthController
 use App\Http\Controllers\UserController; // Asegúrate de importar UserController
+use App\Http\Controllers\WorldCupController;
 
+// Y podemos ponerle un alias al de Admin para evitar confusiones si lo necesitas abajo
+use App\Http\Controllers\Admin\WorldCupController as AdminWorldCupController;
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -55,26 +60,42 @@ Route::prefix('auth')->name('auth.')->controller(AuthController::class)->group(f
 // --- RUTAS DEL PERFIL DE USUARIO (Protegidas) ---
 Route::prefix('user')->name('user.')->middleware('auth')->group(function () {
     Route::get('/profile', [UserController::class, 'profile'])->name('me');
+    
+    // --- RUTAS DE AJUSTES (ACTUALIZADO) ---
     Route::get('/settings', [UserController::class, 'settings'])->name('settings');
+    // Ruta para procesar el formulario de actualización
+    Route::patch('/settings', [UserController::class, 'updateSettings'])->name('settings.update'); 
+    // --------------------------------------
+
     Route::get('/contribute', [UserController::class, 'contribute'])->name('contribute');
 });
 
 // --- RUTAS DEL PANEL DE ADMINISTRADOR (Aún públicas para demo) ---
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
     
-    Route::view('/dashboard', 'admin.dashboard')->name('dashboard');
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
-    // --- ¡RUTAS DE MUNDIALES CORREGIDAS! ---
-    // Apuntan al controlador en lugar de a la vista directamente
-    Route::get('/worldcups', [WorldCupController::class, 'index'])->name('worldcups.index');
-    Route::get('/worldcups/create', [WorldCupController::class, 'create'])->name('worldcups.create');
-    Route::post('/worldcups', [WorldCupController::class, 'store'])->name('worldcups.store');
-    // (Aquí irán las rutas de edit, update, delete)
+    // CRUD de Mundiales
+    Route::get('/worldcups', [AdminWorldCupController::class, 'index'])->name('worldcups.index');
+    Route::get('/worldcups/create', [AdminWorldCupController::class, 'create'])->name('worldcups.create');
+    Route::post('/worldcups', [AdminWorldCupController::class, 'store'])->name('worldcups.store');
+    Route::get('/worldcups/{worldcup}/edit', [AdminWorldCupController::class, 'edit'])->name('worldcups.edit');
+    Route::put('/worldcups/{worldcup}', [AdminWorldCupController::class, 'update'])->name('worldcups.update');
+    Route::delete('/worldcups/{worldcup}', [AdminWorldCupController::class, 'destroy'])->name('worldcups.destroy');
+    
+    // CRUD de Categorías
+    Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');
+    Route::post('/categories', [AdminCategoryController::class, 'store'])->name('categories.store');
+    Route::delete('/categories/{id}', [AdminCategoryController::class, 'destroy'])->name('categories.destroy');
 
-    // Rutas que aún son estáticas (por ahora)
+    // --- 2. RUTAS PARA GESTIÓN DE USUARIOS (Reemplaza el Route::view) ---
+    Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+    Route::delete('/users/{id}', [AdminUserController::class, 'destroy'])->name('users.destroy');
+    Route::patch('/worldcups/{id}/restore', [AdminWorldCupController::class, 'restore'])->name('worldcups.restore');
+    // -----------------------------------------------------------------
+
+    // Rutas estáticas restantes
     Route::view('/publications', 'admin.publications.index')->name('publications.index');
-    Route::view('/categories', 'admin.categories.index')->name('categories.index');
-    Route::view('/users', 'admin.users.index')->name('users.index');
     Route::view('/comments', 'admin.comments.index')->name('comments.index');
 });
 

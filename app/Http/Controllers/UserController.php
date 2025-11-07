@@ -16,18 +16,21 @@ use App\Http\Requests\User\UpdateProfilePhotoRequest;
 use App\Http\Requests\User\UpdatePasswordRequest;
 use App\Http\Requests\User\SotrePublicationRequest;
 
+use App\Repositories\PublicationRepository;
 
 class UserController extends Controller
 {
     // --- INICIO DE LA CORRECCIÓN (Añadir constructor) ---
     protected $repository;
     protected $countryService;
+    protected $publicationRepository;
 
     // Inyección de dependencias
-    public function __construct(UserRepository $repository, CountryService $countryService)
+    public function __construct(UserRepository $repository, CountryService $countryService, PublicationRepository $publicationRepository)
     {
         $this->repository = $repository;
         $this->countryService = $countryService;
+        $this->publicationRepository = $publicationRepository;
     }
 
 
@@ -36,9 +39,17 @@ class UserController extends Controller
      */
     public function profile()
     {
-        // La vista 'user.me' ya tiene acceso a Auth::user()
-        // pero aquí podríamos pasarle datos extra, como sus publicaciones.
-        return view('user.me');
+        // --- 5. LÓGICA ACTUALIZADA ---
+        $userId = Auth::id();
+        
+        // Obtenemos las publicaciones y la multimedia usando el método del repositorio
+        $profileData = $this->publicationRepository->getPublicationsForProfile($userId);
+
+        // Pasamos las publicaciones y la multimedia a la vista
+        return view('user.me', [
+            'publications' => $profileData['publications'],
+            'media' => $profileData['media']
+        ]);
     }
 
     /**

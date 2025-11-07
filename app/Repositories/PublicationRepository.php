@@ -66,7 +66,7 @@ class PublicationRepository
             }
 
             // --- Paso 3: Procesar y guardar los videos (si existen) ---
-            if (isset($data['videos'])) {
+            if (isset($data['videos']) && is_array($data['videos']) && count($data['videos']) > 0) {
                 foreach ($data['videos'] as $videoUrl) {
                     // Llamamos al SP de multimedia
                     DB::statement('CALL sp_user_add_publication_media(?, ?, ?, ?)', [
@@ -136,5 +136,19 @@ class PublicationRepository
     public function delete(int $id): void
     {
         DB::statement('CALL sp_admin_delete_publication(?)', [$id]);
+    }
+
+    public function getPublicationsForProfile(int $userId)
+    {
+        $publications = DB::select('CALL sp_get_user_publications(?)', [$userId]);
+        $allMedia = DB::select('CALL sp_get_user_publications_media(?)', [$userId]);
+
+        // Agrupamos la multimedia por 'publication_id' para un acceso fácil en la vista
+        $mediaByPublication = collect($allMedia)->groupBy('publication_id');
+
+        return [
+            'publications' => $publications,
+            'media' => $mediaByPublication
+        ];
     }
 }

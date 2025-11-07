@@ -60,6 +60,7 @@ class StorePublicationRequest extends FormRequest
             'videos' => 'nullable|array|max:2',
             // Cada item dentro del array 'videos' debe ser un enlace válido de YouTube/Vimeo
             'videos.*' => [
+                'nullable',
                 'string',
                 'url',
                 'regex:' . $videoRegex
@@ -80,7 +81,7 @@ class StorePublicationRequest extends FormRequest
             'images.*.max' => 'Una de las imágenes pesa más de 2MB.',
             'videos.max' => 'No puedes añadir más de 2 enlaces de video.',
             'videos.*.url' => 'Uno de los enlaces de video no es una URL válida.',
-            'videos.*.regex' => 'Solo se aceptan enlaces de YouTube o Vimeo.',
+            'videos.*.regex' => 'Solo se aceptan enlaces de YouTube.',
         ];
     }
 }

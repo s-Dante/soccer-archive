@@ -1,64 +1,77 @@
-@extends('layouts.app')
+@extends('layouts.app') {{-- Usamos el layout principal --}}
 
-@section('title', 'Mi Perfil') {{-- Esto define el título de la página --}}
+@section('title', 'Mi Perfil')
 
-@section('body_class', 'bg-neutral-800 text-white') {{-- Asignamos la clase al body --}}
+@section('content')
+<div class="container mx-auto px-4 py-12 text-white">
 
-@section('content') {{-- Aquí comienza el contenido principal --}}
-    <div class="container mx-auto px-4 py-8 text-white">
+    {{-- Encabezado del Perfil (Información del Usuario) --}}
+    <div class="flex flex-col md:flex-row items-center md:items-start text-center md:text-left gap-8 mb-12">
+        {{-- Foto de Perfil (usamos la misma lógica del header) --}}
+        @php
+            $user = Auth::user();
+            if ($user->profile_photo) {
+                $profilePhotoUrl = 'data:image/jpeg;base64,' . base64_encode($user->profile_photo);
+            } else {
+                $svg = '<svg class="w-full h-full text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>';
+                $profilePhotoUrl = 'data:image/svg+xml;base64,' . base64_encode($svg);
+            }
+        @endphp
+        <img class="h-32 w-32 md:h-40 md:w-40 rounded-full object-cover border-4 border-gray-700" 
+             src="{{ $profilePhotoUrl }}" 
+             alt="Foto de perfil">
         
-        {{-- SECCIÓN SUPERIOR DEL PERFIL --}}
-        <div class="flex flex-col md:flex-row items-center gap-8 mb-12">
-            {{-- FOTO DE PERFIL --}}
-            <div class="w-40 h-40 rounded-full overflow-hidden border-4 border-gray-600 shadow-lg">
-                @auth
-                    @if (Auth::user()->profile_photo)
-                        <img class="w-full h-full object-cover" 
-                             src="data:image/jpeg;base64,{{ base64_encode(Auth::user()->profile_photo) }}" 
-                             alt="Foto de perfil de {{ Auth::user()->name }}">
-                    @else
-                        <div class="w-full h-full bg-gray-700 flex items-center justify-center">
-                            <span class="text-4xl text-gray-400">{{ substr(Auth::user()->name, 0, 1) }}</span>
-                        </div>
-                    @endif
-                @endauth
-            </div>
-            
-            {{-- INFORMACIÓN Y BOTONES --}}
-            <div>
-                @auth
-                    <h1 class="text-4xl font-bold">{{ Auth::user()->name }} {{ Auth::user()->last_name }}</h1>
-                    <p class="text-lg text-gray-400">{{ Auth::user()->email }}</p>
-                    <p class="text-lg text-gray-400">{{ Auth::user()->username }}</p>
-                @endauth
-                <div class="mt-4 flex gap-4">
-                    <a href="{{ route('user.contribute') }}" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-lg transition">
-                        Contribuir
-                    </a>
-                    <a href="{{ route('user.settings') }}" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition">
-                        Editar Perfil
-                    </a>
-                </div>
-            </div>
-        </div>
+        <div class="flex-1">
+            <h1 class="text-4xl font-bold baloo-bhaijaan-2-bold">{{ $user->username }}</h1>
+            <h2 class="text-xl text-gray-300">{{ $user->name }} {{ $user->last_name }}</h2>
+            <p class="text-gray-400 mt-2">Se unió el {{ $user->created_at->format('d M, Y') }}</p>
 
-        {{-- SECCIÓN DE "MIS PUBLICACIONES" --}}
-        <div>
-            <h2 class="text-3xl font-bold border-b-2 border-gray-700 pb-2 mb-6">Mis Publicaciones</h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {{-- Ejemplo de una tarjeta de publicación --}}
-                <div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold mb-2">Título de la Publicación</h3>
-                        <p class="text-gray-400 text-sm mb-2">Mundial: México 1986</p>
-                        <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-yellow-600 bg-yellow-200">
-                            Pendiente de Aprobación
-                        </span>
-                    </div>
-                </div>
-                <p class="text-gray-400 col-span-full">Aún no has creado ninguna publicación.</p>
+            <div class="flex justify-center md:justify-start gap-4 mt-4">
+                <a href="{{ route('user.settings') }}" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-5 rounded-lg transition">
+                    Editar Perfil
+                </a>
+                <a href="{{ route('user.contribute') }}" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-5 rounded-lg transition">
+                    Contribuir
+                </a>
             </div>
         </div>
     </div>
-@endsection {{-- Aquí termina el contenido principal --}}
+
+    {{-- --- SECCIÓN DE PUBLICACIONES --- --}}
+    <h3 class="text-3xl font-bold mb-6 baloo-bhaijaan-2-bold border-b border-gray-700 pb-2">Mis Publicaciones</h3>
+
+    {{-- Mensaje de éxito al crear publicación --}}
+    @if (session('success'))
+        <div class="bg-green-500/20 border border-green-500/30 text-green-300 text-sm rounded-md p-3 mb-6">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if(empty($publications))
+        <div class="text-center text-gray-400 py-16">
+            <p class="text-xl">Aún no has hecho ninguna publicación.</p>
+            <a href="{{ route('user.contribute') }}" class="mt-4 inline-block text-blue-400 hover:underline text-lg">¡Crea tu primera contribución!</a>
+        </div>
+    @else
+        {{-- Grid "Estilo Instagram" --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
+            
+            @foreach($publications as $publication)
+                {{-- 
+                    Usamos el componente reutilizable.
+                    Le pasamos los detalles de la publicación.
+                    Le pasamos la multimedia (que ya filtramos en el controlador).
+                    Le pasamos la bandera 'showStatus' para que muestre el badge.
+                --}}
+                <x-publication-card 
+                    :details="$publication" 
+                    :media="$media->get($publication->id, collect())" 
+                    :show-status="true" 
+                />
+            @endforeach
+
+        </div>
+    @endif
+
+</div>
+@endsection

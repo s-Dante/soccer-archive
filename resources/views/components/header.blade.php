@@ -67,10 +67,18 @@
 
                     {{-- Foto de Perfil (como enlace directo) --}}
                     <a href="{{ route('user.me') }}" class="flex rounded-full glass text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
-                        <span class="sr-only">Ir a mi perfil</span>
-                        <img class="h-12 w-12 rounded-full object-cover" 
-                             src="{{ $profilePhotoUrl }}" 
-                             alt="Foto de perfil">
+                        @auth
+                            @if (Auth::user()->profile_photo)
+                                    <span class="sr-only">Ir a mi perfil</span>
+                                    <img class="h-12 w-12 rounded-full object-cover" 
+                                        src="data:image/jpeg;base64,{{ base64_encode(Auth::user()->profile_photo) }}" 
+                                        alt="Foto de perfil">
+                            @else
+                                <div class="w-12 h-12 rounded-full object-cover bg-gray-700 flex items-center justify-center">
+                                    <span class="text-4xl text-gray-400">{{ substr(Auth::user()->name, 0, 1) }}</span>
+                                </div>
+                            @endif
+                        @endauth
                     </a>
                 </div>
             @endauth

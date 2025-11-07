@@ -3,10 +3,19 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth; // Importante para obtener el usuario
+
 use App\Repositories\UserRepository;
+use App\Repositories\User\StorePublicationRequest;
+
 use App\Services\CountryService;
+
 use App\Http\Requests\User\UpdateProfileRequest;
+use App\Http\Requests\User\UpdateProfilePhotoRequest;
+use App\Http\Requests\User\UpdatePasswordRequest;
+use App\Http\Requests\User\SotrePublicationRequest;
+
 
 class UserController extends Controller
 {
@@ -53,14 +62,6 @@ class UserController extends Controller
         return view('user.settings', compact('user', 'countries'));
     }
 
-    /**
-     * Muestra la página para crear una contribución.
-     */
-    public function contribute()
-    {
-        // Aquí después cargaremos los mundiales y categorías para los <select>
-        return view('user.contribute');
-    }
 
     /**
      * Actualiza la información del perfil del usuario.
@@ -80,6 +81,45 @@ class UserController extends Controller
                          ->with('success', 'Tu perfil ha sido actualizado exitosamente.');
     }
 
-    // (Más adelante, aquí pondremos el método 'updateSettings' 
-    // para guardar los cambios del formulario)
+    // --- 3. MÉTODO NUEVO PARA ACTUALIZAR LA FOTO ---
+    public function updatePhoto(UpdateProfilePhotoRequest $request)
+    {
+        $userId = Auth::id();
+        
+        // 1. Obtenemos el archivo validado
+        $photo = $request->file('profile_photo');
+        
+        // 2. Convertimos el archivo a binario
+        $photoData = file_get_contents($photo->getRealPath());
+
+        // 3. Llamamos al repositorio para actualizar la foto
+        $this->repository->updateProfilePhoto($userId, $photoData);
+
+        // 4. Redirigimos de vuelta con un mensaje de éxito
+        return redirect()->route('user.settings')
+                         ->with('success_photo', 'Tu foto de perfil ha sido actualizada.');
+    }
+
+    // --- 4. MÉTODO NUEVO PARA ACTUALIZAR LA CONTRASEÑA ---
+    public function updatePassword(UpdatePasswordRequest $request)
+    {
+        $userId = Auth::id();
+
+        // 1. La validación (incluyendo si la 'current_password' es correcta)
+        // ya se hizo en el UpdatePasswordRequest.
+        
+        // 2. Obtenemos la nueva contraseña ya validada
+        $newPassword = $request->validated('password');
+
+        // 3. Hasheamos la nueva contraseña
+        $newPasswordHash = Hash::make($newPassword);
+
+        // 4. Llamamos al repositorio para guardarla
+        $this->repository->updatePasswordById($userId, $newPasswordHash);
+
+        // 5. Redirigimos de vuelta con un mensaje de éxito
+        return redirect()->route('user.settings')
+                         ->with('success_password', 'Tu contraseña ha sido cambiada exitosamente.');
+    }
+
 }

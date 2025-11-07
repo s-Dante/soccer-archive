@@ -13,10 +13,12 @@ return new class extends Migration
     {
         Schema::create('multimedia', function (Blueprint $table) {
             $table->id();
-            $table->binary('file_data');
-            $table->enum('type', ['image', 'video', 'audio', 'document']);
+            $table->enum('media_type', ['image', 'video']);
+            $table->longText('media_data')->nullable()->charset('binary');
+            $table->string('media_url')->nullable();
             $table->foreignId('publication_id')->constrained('publications')->onDelete('cascade');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

@@ -15,10 +15,11 @@ return new class extends Migration
             $table->id();
             $table->year('year')->unique();
             $table->string('host_country');
-            $table->string('description')->nullable();
-            $table->binary('cover_image')->nullable();
-            $table->binary('ball_image')->nullable();
+            $table->text('description')->nullable();
+            $table->longText('cover_image')->nullable()->charset('binary');
+            $table->longText('ball_image')->nullable()->charset('binary');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

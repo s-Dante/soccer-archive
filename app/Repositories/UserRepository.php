@@ -119,4 +119,23 @@ class UserRepository
             $data['country']
         ]);
     }
+
+    public function updateProfilePhoto(int $id, $photoData): void
+    {
+        DB::statement('CALL sp_update_user_photo(?, ?)', [
+            $id,
+            $photoData
+        ]);
+    }
+
+    /**
+     * Actualiza la contraseña de un usuario (usando su ID).
+     */
+    public function updatePasswordById(int $id, string $newPasswordHash): void
+    {
+        DB::statement('CALL sp_update_user_password_by_id(?, ?)', [
+            $id,
+            $newPasswordHash
+        ]);
+    }
 }

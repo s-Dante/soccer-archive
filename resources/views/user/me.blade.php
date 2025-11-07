@@ -29,6 +29,7 @@
                 @auth
                     <h1 class="text-4xl font-bold">{{ Auth::user()->name }} {{ Auth::user()->last_name }}</h1>
                     <p class="text-lg text-gray-400">{{ Auth::user()->email }}</p>
+                    <p class="text-lg text-gray-400">{{ Auth::user()->username }}</p>
                 @endauth
                 <div class="mt-4 flex gap-4">
                     <a href="{{ route('user.contribute') }}" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-lg transition">

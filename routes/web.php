@@ -4,12 +4,15 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController; // Asegúrate de importar AuthController
 use App\Http\Controllers\UserController; // Asegúrate de importar UserController
 use App\Http\Controllers\WorldCupController;
+use App\Http\Controllers\PublicationController;
 
 // Y podemos ponerle un alias al de Admin para evitar confusiones si lo necesitas abajo
 use App\Http\Controllers\Admin\WorldCupController as AdminWorldCupController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\PublicationController as AdminPublicationController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -65,9 +68,14 @@ Route::prefix('user')->name('user.')->middleware('auth')->group(function () {
     Route::get('/settings', [UserController::class, 'settings'])->name('settings');
     // Ruta para procesar el formulario de actualización
     Route::patch('/settings', [UserController::class, 'updateSettings'])->name('settings.update'); 
+
+    Route::patch('/settings/photo', [UserController::class, 'updatePhoto'])->name('settings.photo'); // <-- NUEVA RUTA
+    Route::patch('/settings/password', [UserController::class, 'updatePassword'])->name('settings.password'); // <-- NUEVA RUTA
     // --------------------------------------
 
-    Route::get('/contribute', [UserController::class, 'contribute'])->name('contribute');
+    Route::get('/contribute', [PublicationController::class, 'contribute'])->name('contribute');
+    Route::post('/contribute', [PublicationController::class, 'storeContribution'])->name('contribute.store');
+    
 });
 
 // --- RUTAS DEL PANEL DE ADMINISTRADOR (Aún públicas para demo) ---
@@ -91,11 +99,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // --- 2. RUTAS PARA GESTIÓN DE USUARIOS (Reemplaza el Route::view) ---
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
     Route::delete('/users/{id}', [AdminUserController::class, 'destroy'])->name('users.destroy');
+    Route::patch('/users/{id}/restore', [AdminUserController::class, 'restore'])->name('users.restore');
+
+
     Route::patch('/worldcups/{id}/restore', [AdminWorldCupController::class, 'restore'])->name('worldcups.restore');
     // -----------------------------------------------------------------
 
     // Rutas estáticas restantes
-    Route::view('/publications', 'admin.publications.index')->name('publications.index');
+    Route::get('/publications', [AdminPublicationController::class, 'index'])->name('publications.index');
+    Route::get('/publications/{publication}', [AdminPublicationController::class, 'show'])->name('publications.show');
+    Route::patch('/publications/{publication}', [AdminPublicationController::class, 'updateStatus'])->name('publications.updateStatus');
+    Route::delete('/publications/{publication}', [AdminPublicationController::class, 'destroy'])->name('publications.destroy');
+
     Route::view('/comments', 'admin.comments.index')->name('comments.index');
 });
 

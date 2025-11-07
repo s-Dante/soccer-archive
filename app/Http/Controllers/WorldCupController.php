@@ -2,16 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Repositories\WorldCupRepository;
 use Illuminate\Http\Request;
+
+use App\Repositories\WorldCupRepository;
+use App\Repositories\PublicationRepository;
 
 class WorldCupController extends Controller
 {
     protected $repository;
+    protected $publicationRepository;
 
-    public function __construct(WorldCupRepository $repository)
+    public function __construct(WorldCupRepository $repository, PublicationRepository $publicationRepository)
     {
         $this->repository = $repository;
+        $this->publicationRepository = $publicationRepository;
     }
 
     /**
@@ -30,19 +34,27 @@ class WorldCupController extends Controller
     /**
      * Muestra un mundial específico por su año.
      */
+    /**
+     * Muestra un mundial específico por su año.
+     */
     public function show($year)
     {
-        // Esto ya estaba bien
+        // 1. Obtenemos los datos del mundial (esto ya estaba bien)
         $worldCup = $this->repository->getByYear($year);
 
         if (!$worldCup) {
             abort(404);
         }
 
-        // Aquí deberíamos cargar también las publicaciones de este mundial
-        // $publications = $this->repository->getPublicationsForWorldCup($worldCup->id);
+        // --- 5. LÓGICA AÑADIDA ---
+        // 2. Obtenemos todas las publicaciones APROBADAS y su multimedia
+        $data = $this->publicationRepository->getForInfographicPage($worldCup->id);
         
-        // return view('world-cup', compact('worldCup', 'publications'));
-        return view('world-cup', compact('worldCup'));
+        // 3. Pasamos todo a la vista (worldCup, publications, media)
+        return view('world-cup', [
+            'worldCup' => $worldCup,
+            'publications' => $data['publications'],
+            'media' => $data['media']
+        ]);
     }
 }

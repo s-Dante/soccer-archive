@@ -151,4 +151,22 @@ class PublicationRepository
             'media' => $mediaByPublication
         ];
     }
+
+    /**
+     * Obtiene todas las publicaciones APROBADAS y su multimedia
+     * para una página de mundial específica (estilo infografía).
+     */
+    public function getForInfographicPage(int $worldCupId)
+    {
+        $publications = DB::select('CALL sp_get_infographic_publications(?)', [$worldCupId]);
+        $allMedia = DB::select('CALL sp_get_infographic_media(?)', [$worldCupId]);
+
+        // Agrupamos la multimedia por 'publication_id'
+        $mediaByPublication = collect($allMedia)->groupBy('publication_id');
+
+        return [
+            'publications' => $publications,
+            'media' => $mediaByPublication
+        ];
+    }
 }

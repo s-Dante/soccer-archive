@@ -34,7 +34,7 @@
         @endif
         
         <div class="flex-1">
-            <h1 class="text-4xl font-bold baloo-bhaijaan-2-bold">{{ $user->username }}</h1>
+            <h1 class="text-4xl font-bold ">{{ $user->username }}</h1>
             <h2 class="text-xl text-gray-300">{{ $user->name }} {{ $user->last_name }}</h2>
             <p class="text-gray-400 mt-2">Se unió el {{ $user->created_at->format('d M, Y') }}</p>
 
@@ -42,7 +42,7 @@
                 <a href="{{ route('user.settings') }}" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-5 rounded-lg transition">
                     Editar Perfil
                 </a>
-                <a href="{{ route('user.contribute') }}" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-5 rounded-lg transition">
+                <a href="{{ route('user.contribute') }}" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-5 rounded-lg transition">
                     Contribuir
                 </a>
             </div>

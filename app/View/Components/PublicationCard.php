@@ -10,15 +10,16 @@ class PublicationCard extends Component
     public $publication;    // Contendrá los detalles (título, contenido, etc.)
     public array $images = []; // Contendrá las imágenes convertidas a Base64
     public array $videos = []; // Contendrá los enlaces de video
+    public $showStatus;
 
     /**
      * Create a new component instance.
      * Recibe los datos pasados desde el controlador.
      */
-    public function __construct($details, $media)
+    public function __construct($details, $media, $showStatus = false)
     {
         $this->publication = $details;
-
+        $this->showStatus = $showStatus;
         // Procesamos el array de multimedia
         foreach ($media as $item) {
             if ($item->media_type == 'image' && $item->media_data) {

@@ -12,30 +12,26 @@
 
 <div data-post="{{ $uid }}" class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden max-w-md w-full">
 
+    @if($showStatus ?? false)
+        <div class="left-3 top-3 z-20">
+            @if($publication->status === 'accepted')
+                <span class="text-xs font-semibold inline-block py-1 px-3 uppercase rounded-full text-green-200 bg-green-700/70 shadow-sm">
+                    Aprobado
+                </span>
+            @elseif($publication->status === 'rejected')
+                <span class="text-xs font-semibold inline-block py-1 px-3 uppercase rounded-full text-orange-200 bg-orange-700/70 shadow-sm">
+                    Rechazado
+                </span>
+            @else
+                <span class="text-xs font-semibold inline-block py-1 px-3 uppercase rounded-full text-yellow-100 bg-yellow-700/60 shadow-sm">
+                    Pendiente
+                </span>
+            @endif
+        </div>
+    @endif
+
     {{-- Header (sin menú de 3 puntos) --}}
     <div class="flex items-center px-4 py-3">
-        {{-- --- INICIO DEL CÓDIGO A AÑADIR (EL BADGE) --- --}}
-        {{-- Mostramos el "badge" de estado si la variable $showStatus es true --}}
-        @if($showStatus ?? false)
-            <div class="mb-2">
-                @if($publication->status == 'accepted')
-                    <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-green-400 bg-green-800/50">
-                        Aprobado
-                    </span>
-                @elseif($publication->status == 'rejected')
-                    <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-orange-400 bg-orange-800/50">
-                        Rechazado
-                    </span>
-                @else
-                    <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-yellow-400 bg-yellow-800/50">
-                        Pendiente de Revisión
-                    </span>
-                @endif
-            </div>
-        @endif
-        {{-- --- FIN DEL CÓDIGO A AÑADIR (EL BADGE) --- --}}
-
-
         <img src="{{ $publication->author_avatar ?? 'https://ui-avatars.com/api/?name=' . urlencode($publication->author_name) . '&background=111827&color=fff' }}"
              alt="avatar" class="w-9 h-9 rounded-full object-cover mr-3">
         <div class="leading-tight">
@@ -45,6 +41,7 @@
             </div>
         </div>
     </div>
+
 
     {{-- Carrusel (solo si hay media) --}}
     @if(count($media))

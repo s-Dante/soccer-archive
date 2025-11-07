@@ -10,16 +10,28 @@
         {{-- Foto de Perfil (usamos la misma lógica del header) --}}
         @php
             $user = Auth::user();
-            if ($user->profile_photo) {
-                $profilePhotoUrl = 'data:image/jpeg;base64,' . base64_encode($user->profile_photo);
-            } else {
-                $svg = '<svg class="w-full h-full text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>';
-                $profilePhotoUrl = 'data:image/svg+xml;base64,' . base64_encode($svg);
+
+            // Si quieres las iniciales de nombre y apellido:
+            $initials = '';
+            if ($user) {
+                $parts = explode(' ', trim($user->name)); // separa por espacios
+                $first = strtoupper(substr($parts[0] ?? '', 0, 1));
+                $last = strtoupper(substr(end($parts) ?? '', 0, 1));
+                $initials = $first . ($first !== $last ? $last : '');
             }
         @endphp
-        <img class="h-32 w-32 md:h-40 md:w-40 rounded-full object-cover border-4 border-gray-700" 
-             src="{{ $profilePhotoUrl }}" 
-             alt="Foto de perfil">
+
+        @if ($user && $user->profile_photo)
+            {{-- Foto real --}}
+            <img class="h-32 w-32 md:h-40 md:w-40 rounded-full object-cover border-4 border-gray-700"
+                src="data:image/jpeg;base64,{{ base64_encode($user->profile_photo) }}"
+                alt="Foto de perfil">
+        @else
+            {{-- Círculo con inicial(es) --}}
+            <div class="h-32 w-32 md:h-40 md:w-40 rounded-full bg-gray-700 border-4 border-gray-700 flex items-center justify-center text-5xl font-bold text-gray-300">
+                {{ $initials }}
+            </div>
+        @endif
         
         <div class="flex-1">
             <h1 class="text-4xl font-bold baloo-bhaijaan-2-bold">{{ $user->username }}</h1>
@@ -58,14 +70,27 @@
             
             @foreach($publications as $publication)
                 {{-- 
-                    Usamos el componente reutilizable.
-                    Le pasamos los detalles de la publicación.
-                    Le pasamos la multimedia (que ya filtramos en el controlador).
-                    Le pasamos la bandera 'showStatus' para que muestre el badge.
+                    Este bloque @php ya no es necesario aquí.
+                    La lógica de convertir BLOBs e imágenes
+                    ya la hace el constructor de PublicationCard.php
+                --}}
+                @php
+                    /*
+                    $publicationMedia = $media->get($publication->id, collect());
+                    $imagesArray = ...
+                    $videosArray = ...
+                    */
+                @endphp
+
+                {{-- 
+                    CORRECCIÓN:
+                    Le pasamos las variables que el CONSTRUCTOR espera:
+                    - El parámetro $details espera :details
+                    - El parámetro $media espera :media
                 --}}
                 <x-publication-card 
                     :details="$publication" 
-                    :media="$media->get($publication->id, collect())" 
+                    :media="$media->get($publication->id, collect())"
                     :show-status="true" 
                 />
             @endforeach

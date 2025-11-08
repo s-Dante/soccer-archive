@@ -178,17 +178,36 @@ class PublicationRepository
     }
 
     /**
-     * Añade o quita un "like" (Tarjeta Verde) de una publicación.
-     * Llama a: sp_user_toggle_like
+     * Añade o quita un like. Firma: toggleLike(int $userId, int $publicationId)
+     * Devuelve un objeto normalizado: { ok: bool, status: 'liked'|'unliked'|null, raw: <raw SP result>, message?: string }
      */
-    public function toggleLike(int $publicationId, int $userId)
+    public function toggleLike(int $userId, int $publicationId)
     {
-        // Usamos selectOne para obtener la respuesta del SP ('liked' o 'unliked')
-        return DB::selectOne('CALL sp_user_toggle_like(?, ?)', [
+        // Llamada al SP con orden userId, publicationId (tal como tu SP espera)
+        $res = DB::selectOne('CALL sp_user_toggle_like(?, ?)', [
             $userId,
             $publicationId
         ]);
+
+        if (!$res) {
+            return (object)[
+                'ok' => false,
+                'status' => null,
+                'raw' => null,
+                'message' => 'No response from stored procedure'
+            ];
+        }
+
+        // el SP idealmente devuelve: SELECT 'liked' AS status; o 'unliked'
+        $status = $res->status ?? $res->result ?? $res->action ?? null;
+
+        return (object)[
+            'ok' => true,
+            'status' => $status,
+            'raw' => $res
+        ];
     }
+
 
     public function getLikedPublications(int $userId)
     {
@@ -216,11 +235,11 @@ class PublicationRepository
 
         // 1. Llamamos al SP de publicaciones, pasando el ID del usuario
         $publications = DB::select('CALL sp_search_publications(?, ?, ?, ?, ?, ?)', [
+            $userId, // El ID del usuario actual para saber sus likes            
             $categoryId,
             $worldCupId,
             $hostCountry,
             $authorName,
-            $userId, // El ID del usuario actual para saber sus likes
             100
         ]);
 

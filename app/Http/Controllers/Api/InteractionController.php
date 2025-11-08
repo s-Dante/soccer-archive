@@ -7,6 +7,7 @@ use App\Models\Publication; // Usaremos el modelo para la inyección de ruta
 use App\Repositories\PublicationRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class InteractionController extends Controller
 {
@@ -22,26 +23,56 @@ class InteractionController extends Controller
      */
     public function toggleLike(Request $request, Publication $publication)
     {
-        $userId = Auth::id(); // Obtenemos el ID del usuario autenticado
+        \Log::info('toggleLike web route called', ['user' => Auth::id(), 'publication' => $publication->id]);
+
+        $userId = Auth::id();
+
+        if (!$userId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No autenticado.'
+            ], 401);
+        }
 
         try {
-            // Llamamos al repositorio, que llama al SP
-            $result = $this->repository->toggleLike($publication->id, $userId);
-            
-            // Devolvemos una respuesta JSON exitosa
+            // Llamamos al repo pasando userId primero (tu SP espera userId, publicationId)
+            $result = $this->repository->toggleLike($userId, $publication->id);
+
+            if (!($result->ok ?? false)) {
+                \Log::warning('toggleLike: SP returned no result', ['user' => $userId, 'publication' => $publication->id]);
+                return response()->json([
+                    'success' => false,
+                    'message' => $result->message ?? 'No se obtuvo respuesta del servidor.'
+                ], 500);
+            }
+
+            // Consultar conteo real de likes para sincronizar la UI
+            $likeCount = DB::table('interactions')
+                ->where('publication_id', $publication->id)
+                ->where('type', 'like')
+                ->count();
+
             return response()->json([
                 'success' => true,
-                'status' => $result->status, // 'liked' o 'unliked'
-            ]);
+                'status' => $result->status,    // 'liked' o 'unliked' (si el SP lo devuelve)
+                'like_count' => $likeCount
+            ], 200);
 
         } catch (\Exception $e) {
-            // Si algo falla (ej. la BD), devolvemos un error
+            \Log::error('toggleLike error: '.$e->getMessage(), [
+                'publication_id' => $publication->id,
+                'user_id' => $userId,
+                'exception' => $e
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error al procesar la solicitud.'
             ], 500);
         }
     }
+
+
 
     public function searchPublications(array $filters, int $userId)
     {
@@ -77,5 +108,5 @@ class InteractionController extends Controller
             'media' => $mediaByPublication
         ];
     }
-    
+
 }

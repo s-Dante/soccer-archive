@@ -6,6 +6,7 @@ use App\Http\Controllers\UserController; // Asegúrate de importar UserControlle
 use App\Http\Controllers\WorldCupController;
 use App\Http\Controllers\PublicationController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\Api\InteractionController;
 
 // Y podemos ponerle un alias al de Admin para evitar confusiones si lo necesitas abajo
 use App\Http\Controllers\Admin\WorldCupController as AdminWorldCupController;
@@ -26,6 +27,15 @@ Route::get('/world-cup/{year}', [WorldCupController::class, 'show'])->name('worl
 
 // Página de búsqueda de publicación
 Route::get('/search', [SearchController::class, 'index'])->name('search.index');
+
+// --- RUTA PARA DAR/QUITAR "LIKE" (TARJETA VERDE) ---
+Route::get('/publications/{publication}/like', [InteractionController::class, 'toggleLike'])
+    ->name('publications.like')
+    ->middleware('auth'); // asegura que el usuario esté autenticado
+    
+Route::post('/publications/{publication}/like', [InteractionController::class, 'toggleLike'])
+    ->name('publications.like')
+    ->middleware('auth'); // asegura que el usuario esté autenticado
 
 
 // --- RUTAS DE AUTENTICACIÓN (Flujo Completo) ---

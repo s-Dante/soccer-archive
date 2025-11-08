@@ -106,9 +106,8 @@
                     @endphp
 
                     <x-publication-card 
-                        :publication="$publication" 
-                        :images="$imagesArray"
-                        :videos="$videosArray"
+                        :details="$publication" 
+                        :media="$media->get($publication->id, collect())"
                         :show-status="false" {{-- No mostramos el estado (ya que solo son 'Aprobados') --}}
                     />
                 @endforeach

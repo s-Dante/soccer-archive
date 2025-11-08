@@ -25,8 +25,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- 2. ¡NUEVA RUTA PARA LIKES! ---
     // El nombre 'publication' debe coincidir con el parámetro en el controlador
-    Route::post('/publications/{publication}/like', [InteractionController::class, 'toggleLike'])
-        ->name('api.publications.like');
+    // Route::post('/publications/{publication}/like', [InteractionController::class, 'toggleLike'])
+    //     ->name('api.publications.like');
 
 });
 

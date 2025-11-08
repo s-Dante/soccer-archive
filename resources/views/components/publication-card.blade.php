@@ -116,23 +116,60 @@
     @endif
 
 
-    {{-- Acciones: Like (izquierda) y Comentar (derecha) --}}
+    {{-- Acciones: Tarjeta Verde (izquierda) y Comentar (derecha) --}}
     <div class="px-4 pt-3">
         <div class="flex items-center justify-between">
-            <button class="text-gray-200 hover:text-white flex items-center gap-1">
-                {{-- Like --}}
-                <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                </svg>
-                <span class="text-sm">Me gusta</span>
-            </button>
 
-            <button class="text-gray-200 hover:text-white flex items-center gap-1">
+            {{-- ================================================ --}}
+            {{-- ==== INICIO DEL CÓDIGO DE "TARJETA VERDE" ==== --}}
+            {{-- ================================================ --}}
+
+            {{-- 
+                Este botón ahora es dinámico:
+                1. data-id: Pasa el ID de la publicación al JS.
+                2. data-like-button: Es el selector para el JS.
+                3. class: Cambia de color si 'has_liked' (del SP) es 1.
+                4. fill: Rellena el SVG si 'has_liked' es 1.
+            --}}
+            <button 
+                data-like-button {{-- Identificador para el JS --}}
+                data-id="{{ $publication->id }}" {{-- El ID de la publicación --}}
+                @guest disabled @endguest {{-- Deshabilitar si el usuario no ha iniciado sesión --}}
+                class="flex items-center gap-1 transition-colors disabled:opacity-50
+                    {{-- Si 'has_liked' (del SP) es 1, píntalo de verde; si no, gris --}}
+                    @if($publication->has_liked)
+                        text-green-500 hover:text-green-400 {{-- Estado "Activado" --}}
+                    @else
+                        text-gray-400 hover:text-white {{-- Estado "Desactivado" --}}
+                    @endif
+                "
+            >
+                {{-- Icono de Tarjeta (Corazón) --}}
+                <svg class="w-7 h-7" viewBox="0 0 24 24" 
+                    fill="{{ $publication->has_liked ? 'currentColor' : 'none' }}" {{-- Relleno dinámico --}}
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+                
+                {{-- Texto temático --}}
+                <span class="text-sm font-medium">Tarjeta Verde</span>
+
+                {{-- Conteo de Likes (con un selector para el JS) --}}
+                <span data-like-count class="text-sm font-medium">
+                    {{ $publication->like_count }}
+                </span>
+            </button>
+            {{-- ================================================ --}}
+            {{-- ====== FIN DEL CÓDIGO DE "TARJETA VERDE" ====== --}}
+            {{-- ================================================ --}}
+
+
+            <button class="text-gray-400 hover:text-white flex items-center gap-1">
                 {{-- Comment --}}
                 <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                 </svg>
                 <span class="text-sm">Comentar</span>
             </button>
@@ -152,58 +189,134 @@
     </div>
 </div>
 
+
+
 {{-- JS mínimo para que funcionen los botones y los dots (sin Alpine) --}}
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const root = document.querySelector('[data-post="{{ $uid }}"]');
-    if (!root) return;
+// Usamos una función anónima para evitar colisiones de variables
+(function() {
+    // Esperamos a que el DOM esté listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupCard);
+    } else {
+        setupCard();
+    }
 
-    const track = root.querySelector('[data-track]');
-    const slides = Array.from(track.children);
-    const prevBtn = root.querySelector('[data-prev]');
-    const nextBtn = root.querySelector('[data-next]');
-    const dots = Array.from(root.querySelectorAll('[data-dot]'));
-    let i = 0;
+    function setupCard() {
+        const root = document.querySelector('[data-post="{{ $uid }}"]');
+        if (!root || root.dataset.initialized) {
+            return; // Si no existe o ya se inicializó, no hacemos nada
+        }
+        root.dataset.initialized = true; // Marcamos como inicializado
 
-    const snapTo = (idx) => {
-        i = Math.max(0, Math.min(idx, slides.length - 1));
-        track.scrollTo({ left: track.clientWidth * i, behavior: 'smooth' });
-        updateDots();
-        updateArrows();
-    };
+        // --- LÓGICA DEL CARRUSEL (Tu código original) ---
+        const track = root.querySelector('[data-track]');
+        const slides = track ? Array.from(track.children) : [];
+        const prevBtn = root.querySelector('[data-prev]');
+        const nextBtn = root.querySelector('[data-next]');
+        const dots = Array.from(root.querySelectorAll('[data-dot]'));
+        let i = 0;
 
-    const updateDots = () => {
-        dots.forEach((d, idx) => {
-            d.classList.toggle('w-6', idx === i);
-            d.classList.toggle('bg-white', idx === i);
-            d.classList.toggle('w-1.5', idx !== i);
-            d.classList.toggle('bg-white/50', idx !== i);
-        });
-    };
+        const snapTo = (idx) => {
+            if (!track) return;
+            i = Math.max(0, Math.min(idx, slides.length - 1));
+            track.scrollTo({ left: track.clientWidth * i, behavior: 'smooth' });
+            updateDots();
+            updateArrows();
+        };
 
-    const updateArrows = () => {
-        if (!prevBtn || !nextBtn) return;
-        prevBtn.classList.toggle('opacity-30', i === 0);
-        nextBtn.classList.toggle('opacity-30', i === slides.length - 1);
-        prevBtn.classList.toggle('pointer-events-none', i === 0);
-        nextBtn.classList.toggle('pointer-events-none', i === slides.length - 1);
-    };
+        const updateDots = () => {
+            dots.forEach((d, idx) => {
+                d.classList.toggle('w-6', idx === i);
+                d.classList.toggle('bg-white', idx === i);
+                d.classList.toggle('w-1.5', idx !== i);
+                d.classList.toggle('bg-white/50', idx !== i);
+            });
+        };
 
-    // Listeners
-    if (prevBtn) prevBtn.addEventListener('click', () => snapTo(i - 1));
-    if (nextBtn) nextBtn.addEventListener('click', () => snapTo(i + 1));
-    dots.forEach((d, idx) => d.addEventListener('click', () => snapTo(idx)));
+        const updateArrows = () => {
+            if (!prevBtn || !nextBtn) return;
+            prevBtn.classList.toggle('opacity-30', i === 0);
+            nextBtn.classList.toggle('opacity-30', i === slides.length - 1);
+            prevBtn.classList.toggle('pointer-events-none', i === 0);
+            nextBtn.classList.toggle('pointer-events-none', i === slides.length - 1);
+        };
 
-    // Mantener índice en scroll manual
-    track.addEventListener('scroll', () => {
-        const idx = Math.round(track.scrollLeft / track.clientWidth);
-        if (idx !== i) { i = idx; updateDots(); updateArrows(); }
-    });
+        if (track) {
+            if (prevBtn) prevBtn.addEventListener('click', () => snapTo(i - 1));
+            if (nextBtn) nextBtn.addEventListener('click', () => snapTo(i + 1));
+            dots.forEach((d, idx) => d.addEventListener('click', () => snapTo(idx)));
 
-    // Inicializar estado
-    updateDots();
-    updateArrows();
-});
+            track.addEventListener('scroll', () => {
+                const idx = Math.round(track.scrollLeft / track.clientWidth);
+                if (idx !== i) { i = idx; updateDots(); updateArrows(); }
+            });
+            updateDots();
+            updateArrows();
+        }
+
+        // --- LÓGICA DE TARJETA VERDE (LIKE) ---
+        const likeButton = root.querySelector('[data-like-button]');
+        const likeCountSpan = root.querySelector('[data-like-count]');
+        const likeIcon = likeButton ? likeButton.querySelector('svg') : null;
+
+        if (likeButton && likeCountSpan && likeIcon) {
+            
+            likeButton.addEventListener('click', async () => {
+                // Prevenimos que el usuario de spam de clics
+                if (likeButton.disabled) return; 
+                likeButton.disabled = true;
+
+                const publicationId = likeButton.dataset.id;
+                
+                // 1. Obtener el token CSRF (¡ESENCIAL!)
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                try {
+                    // 2. Llamar a la API que creamos
+                    const response = await fetch(`/api/publications/${publicationId}/like`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+
+                    const result = await response.json();
+
+                    // 3. Actualizar el botón y el conteo en tiempo real
+                    if (result.success) {
+                        const hasLiked = result.status === 'liked';
+                        
+                        // Actualizar color del botón
+                        likeButton.classList.toggle('text-green-500', hasLiked);
+                        likeButton.classList.toggle('text-gray-400', !hasLiked);
+                        
+                        // Actualizar relleno del icono
+                        likeIcon.setAttribute('fill', hasLiked ? 'currentColor' : 'none');
+                        
+                        // Actualizar el conteo
+                        let currentCount = parseInt(likeCountSpan.textContent, 10);
+                        likeCountSpan.textContent = hasLiked ? currentCount + 1 : currentCount - 1;
+                    }
+
+                } catch (error) {
+                    console.error('Error al dar Tarjeta Verde:', error);
+                } finally {
+                    // Volvemos a habilitar el botón después de 1/4 de segundo
+                    setTimeout(() => {
+                        likeButton.disabled = false;
+                    }, 250);
+                }
+            });
+        }
+    }
+})();
 </script>
 
 <style>

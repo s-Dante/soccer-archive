@@ -14,12 +14,21 @@
     
     {{-- BUSCAR (Izquierda) --}}
     <div class="flex-1">
-        <form action="{{ route('search.index') }}" method="GET" class="hidden lg:flex glass items-center p-1 w-full max-w-sm">
-            <input type="text" name="search" placeholder="Buscar..." class="flex-grow bg-transparent text-white placeholder-neutral-300 outline-none baloo-bhaijaan-2-regular py-2 px-4" />
-            <button type="submit" class="baloo-bhaijaan-2-medium cursor-pointer bg-white/10 hover:bg-white/20 rounded-full py-2 px-5 transition-colors">
-                Buscar
-            </button>
-        </form>
+        {{-- Quitamos el <form> y lo reemplazamos por un <a> simple --}}
+        {{-- Esto ahora es un botón que LLEVA a la página de búsqueda --}}
+        <a href="{{ route('search.index') }}" 
+           class="hidden lg:flex glass items-center p-1 w-full max-w-sm hover:bg-white/10 transition-colors rounded-full cursor-pointer">
+            
+            {{-- Texto "Buscar..." que simula el input --}}
+            <span class="flex-grow bg-transparent text-neutral-300 py-2 px-4 baloo-bhaijaan-2-regular">Buscar...</span>
+            
+            {{-- El botón/icono --}}
+            <div class="baloo-bhaijaan-2-medium cursor-pointer bg-white/10 rounded-full py-2 px-5">
+                <svg class="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                </svg>
+            </div>
+        </a>
         <a href="{{ route('search.index') }}" class="lg:hidden p-2">
             <svg class="w-8 h-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />

@@ -45,6 +45,14 @@
                 <a href="{{ route('user.contribute') }}" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-5 rounded-lg transition">
                     Contribuir
                 </a>
+
+                {{-- --- ¡NUEVO ENLACE (con Feature Flag)! --- --}}
+                @if(config('services.features.liked_posts_page', false))
+                <a href="{{ route('user.liked') }}" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-5 rounded-lg transition">
+                    Mis Tarjetas Verdes
+                </a>
+                @endif
+
             </div>
         </div>
     </div>

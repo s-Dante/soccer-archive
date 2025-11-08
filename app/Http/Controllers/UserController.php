@@ -133,4 +133,24 @@ class UserController extends Controller
                          ->with('success_password', 'Tu contraseña ha sido cambiada exitosamente.');
     }
 
+
+    /**
+     * Muestra la página de publicaciones que le han gustado al usuario.
+     */
+    public function showLiked()
+    {
+        // Verificamos si la funcionalidad está activada en el config
+        if (!config('services.features.liked_posts_page', false)) {
+            abort(404); // Si está en 'false', la página no existe
+        }
+        
+        $userId = Auth::id();
+        $data = $this->publicationRepository->getLikedPublications($userId);
+
+        return view('user.liked', [
+            'publications' => $data['publications'],
+            'media' => $data['media']
+        ]);
+    }
+
 }

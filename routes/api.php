@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PasswordValidationController;
+use App\Http\Controllers\Api\InteractionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,12 +16,23 @@ use App\Http\Controllers\Api\PasswordValidationController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::middleware('auth:sanctum')->group(function () {
+    
+    // Ruta para obtener el usuario (ya la tenías)
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+
+    // --- 2. ¡NUEVA RUTA PARA LIKES! ---
+    // El nombre 'publication' debe coincidir con el parámetro en el controlador
+    Route::post('/publications/{publication}/like', [InteractionController::class, 'toggleLike'])
+        ->name('api.publications.like');
+
 });
 
 //                                                                      AÑADE ESTO ↓
-Route::post('/validate-password', [PasswordValidationController::class, 'validatePassword'])->name('api.validate-password');
+Route::post('/validate-password', [PasswordValidationController::class, 'validatePassword'])
+            ->name('api.validate-password');
 
 
 ?>

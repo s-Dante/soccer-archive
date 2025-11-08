@@ -105,8 +105,13 @@ class PublicationRepository
      */
     public function getDetailsById(int $id)
     {
+        $adminUserId = Auth::id() ?? 0;
+
         // El SP de detalles
-        $details = DB::select('CALL sp_admin_get_publication_details(?)', [$id]);
+        $details = DB::select('CALL sp_admin_get_publication_details(?, ?)', [
+            $id,
+            $adminUserId
+        ]);
         
         // El SP de multimedia
         $media = DB::select('CALL sp_admin_get_publication_media(?)', [$id]);
@@ -158,10 +163,78 @@ class PublicationRepository
      */
     public function getForInfographicPage(int $worldCupId)
     {
-        $publications = DB::select('CALL sp_get_infographic_publications(?)', [$worldCupId]);
+        $userId = Auth::id() ?? 0;
+
+        $publications = DB::select('CALL sp_get_infographic_publications(?, ?)', [$worldCupId, $userId]);
         $allMedia = DB::select('CALL sp_get_infographic_media(?)', [$worldCupId]);
 
         // Agrupamos la multimedia por 'publication_id'
+        $mediaByPublication = collect($allMedia)->groupBy('publication_id');
+
+        return [
+            'publications' => $publications,
+            'media' => $mediaByPublication
+        ];
+    }
+
+    /**
+     * Añade o quita un "like" (Tarjeta Verde) de una publicación.
+     * Llama a: sp_user_toggle_like
+     */
+    public function toggleLike(int $publicationId, int $userId)
+    {
+        // Usamos selectOne para obtener la respuesta del SP ('liked' o 'unliked')
+        return DB::selectOne('CALL sp_user_toggle_like(?, ?)', [
+            $userId,
+            $publicationId
+        ]);
+    }
+
+    public function getLikedPublications(int $userId)
+    {
+        // Nota: Este SP ya trae la multimedia y los detalles de la publicación
+        $publications = DB::select('CALL sp_get_user_liked_publications(?)', [$userId]);
+        
+        // Reutilizamos el SP de multimedia del perfil para ser eficientes
+        $allMedia = DB::select('CALL sp_get_user_publications_media(?)', [$userId]);
+        $mediaByPublication = collect($allMedia)->groupBy('publication_id');
+
+        return [
+            'publications' => $publications,
+            'media' => $mediaByPublication
+        ];
+    }
+
+    public function searchPublications(array $filters, int $userId)
+    {
+        // Preparamos los filtros para pasarlos a los SPs
+        // Usamos '?? null' para pasar NULL si el filtro no está presente
+        $categoryId = !empty($filters['category_id']) ? $filters['category_id'] : null;
+        $worldCupId = !empty($filters['world_cup_id']) ? $filters['world_cup_id'] : null;
+        $hostCountry = !empty($filters['host_country']) ? $filters['host_country'] : null;
+        $authorName = !empty($filters['author_name']) ? $filters['author_name'] : null;
+
+        // 1. Llamamos al SP de publicaciones, pasando el ID del usuario
+        $publications = DB::select('CALL sp_search_publications(?, ?, ?, ?, ?, ?)', [
+            $categoryId,
+            $worldCupId,
+            $hostCountry,
+            $authorName,
+            $userId, // El ID del usuario actual para saber sus likes
+            100
+        ]);
+
+        // 2. Llamamos al SP de multimedia (este no necesita el ID del usuario)
+        $allMedia = DB::select('CALL sp_search_publications_media(?, ?, ?, ?, ?, ?)', [
+            $categoryId,
+            $worldCupId,
+            $hostCountry,
+            $authorName,
+            100, 
+            0
+        ]);
+
+        // 3. Agrupamos la multimedia por ID de publicación
         $mediaByPublication = collect($allMedia)->groupBy('publication_id');
 
         return [

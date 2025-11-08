@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'features' => [
+        // Cambia esto a 'false' para ocultar la página "Mis Tarjetas Verdes"
+        'liked_posts_page' => true,
+    ],
+
 ];

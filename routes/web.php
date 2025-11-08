@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController; // Asegúrate de importar AuthControlle
 use App\Http\Controllers\UserController; // Asegúrate de importar UserController
 use App\Http\Controllers\WorldCupController;
 use App\Http\Controllers\PublicationController;
+use App\Http\Controllers\SearchController;
 
 // Y podemos ponerle un alias al de Admin para evitar confusiones si lo necesitas abajo
 use App\Http\Controllers\Admin\WorldCupController as AdminWorldCupController;
@@ -22,7 +23,9 @@ use App\Http\Controllers\Admin\PublicationController as AdminPublicationControll
 // --- RUTAS PÚBLICAS Y PRINCIPALES ---
 Route::get('/', [WorldCupController::class, 'index'])->name('home');
 Route::get('/world-cup/{year}', [WorldCupController::class, 'show'])->name('worldcup.show');
-Route::view('/search', 'search')->name('search.index');
+
+// Página de búsqueda de publicación
+Route::get('/search', [SearchController::class, 'index'])->name('search.index');
 
 
 // --- RUTAS DE AUTENTICACIÓN (Flujo Completo) ---
@@ -75,6 +78,11 @@ Route::prefix('user')->name('user.')->middleware('auth')->group(function () {
 
     Route::get('/contribute', [PublicationController::class, 'contribute'])->name('contribute');
     Route::post('/contribute', [PublicationController::class, 'storeContribution'])->name('contribute.store');
+
+    // --- 3. RUTA CONDICIONAL PARA PÁGINA DE PUBLICACIONES "ME GUSTAN" ---
+    if (config('services.features.liked_posts_page', false)) {
+        Route::get('/liked', [UserController::class, 'showLiked'])->name('liked');
+    }
     
 });
 

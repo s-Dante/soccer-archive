@@ -28,6 +28,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::post('/publications/{publication}/like', [InteractionController::class, 'toggleLike'])
     //     ->name('api.publications.like');
 
+    // 1. OBTENER los datos de una publicación y sus comentarios
+    // Route::get('/publications/{publication}', [PublicationController::class, 'show'])
+    //      ->name('api.publications.show');
+
+    // // 2. PUBLICAR un nuevo comentario
+    // Route::post('/publications/{publication}/comments', [CommentController::class, 'store'])
+    //      ->name('api.comments.store');
+
 });
 
 //                                                                      AÑADE ESTO ↓

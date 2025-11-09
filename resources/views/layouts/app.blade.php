@@ -33,6 +33,13 @@
     </main>
 
     @stack('scripts')
+
+
+    {{-- Scripts de la aplicación (Vite) --}}
+    @vite('resources/js/app.js')
+    
+    {{-- NUESTRO NUEVO MODAL DE COMENTARIOS --}}
+    @include('components.comments-modal')
 </body>
 
 </html>

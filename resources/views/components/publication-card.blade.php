@@ -165,7 +165,10 @@
             {{-- ================================================ --}}
 
 
-            <button class="text-gray-400 hover:text-white flex items-center gap-1">
+            <button 
+                data-comment-button {{-- Hook de JS para abrir el modal --}}
+                data-publication-id="{{ $publication->id }}" {{-- ID para el fetch --}}
+                class="text-gray-400 hover:text-white flex items-center gap-1">
                 {{-- Comment --}}
                 <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

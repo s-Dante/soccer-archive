@@ -96,7 +96,9 @@ class PublicationRepository
 
     public function getForAdminIndex()
     {
-        return DB::select('CALL sp_admin_get_all_publications()');
+        $adminUserId = Auth::id() ?? 0;
+
+        return DB::select('CALL sp_admin_get_all_publications(?)', [$adminUserId]);
     }
 
     /**
@@ -145,7 +147,9 @@ class PublicationRepository
 
     public function getPublicationsForProfile(int $userId)
     {
-        $publications = DB::select('CALL sp_get_user_publications(?)', [$userId]);
+        $currentUserId = Auth::id() ?? 0;
+
+        $publications = DB::select('CALL sp_get_user_publications(?, ?)', [$userId, $currentUserId]);
         $allMedia = DB::select('CALL sp_get_user_publications_media(?)', [$userId]);
 
         // Agrupamos la multimedia por 'publication_id' para un acceso fácil en la vista

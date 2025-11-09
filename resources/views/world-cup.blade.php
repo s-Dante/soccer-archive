@@ -110,6 +110,10 @@
                                         </div>
                                     @endif
                                     
+                                    <x-comments-section 
+                                        :publication-id="$publication->id" 
+                                        :flat-comments="$commentsByPublication->get($publication->id, [])"
+                                    />
                                 </article>
                             @endforeach
                         </div>

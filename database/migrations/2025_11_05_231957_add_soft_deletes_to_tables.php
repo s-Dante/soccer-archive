@@ -21,10 +21,6 @@ return new class extends Migration
         Schema::table('publications', function (Blueprint $table) {
             $table->timestamp('deleted_at')->nullable()->after('updated_at');
         });
-
-        Schema::table('comments', function (Blueprint $table) {
-            $table->timestamp('deleted_at')->nullable()->after('updated_at');
-        });
     }
 
     /**
@@ -34,6 +30,5 @@ return new class extends Migration
     {
         Schema::table('categories', function (Blueprint $table) { $table->dropColumn('deleted_at'); });
         Schema::table('publications', function (Blueprint $table) { $table->dropColumn('deleted_at'); });
-        Schema::table('comments', function (Blueprint $table) { $table->dropColumn('deleted_at'); });
     }
 };

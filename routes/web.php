@@ -7,6 +7,7 @@ use App\Http\Controllers\WorldCupController;
 use App\Http\Controllers\PublicationController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\Api\InteractionController;
+use App\Http\Controllers\Api\CommentController;
 
 // Y podemos ponerle un alias al de Admin para evitar confusiones si lo necesitas abajo
 use App\Http\Controllers\Admin\WorldCupController as AdminWorldCupController;
@@ -37,6 +38,10 @@ Route::post('/publications/{publication}/like', [InteractionController::class, '
     ->name('publications.like')
     ->middleware('auth'); // asegura que el usuario esté autenticado
 
+// --- RUTA PARA AÑADIR COMENTARIOS A UNA PUBLICACIÓN ---   
+Route::post('/publications/{publication}/comments', [CommentController::class, 'store'])
+    ->name('publications.comments.store')
+    ->middleware('auth'); // asegura sesión
 
 // --- RUTAS DE AUTENTICACIÓN (Flujo Completo) ---
 Route::prefix('auth')->name('auth.')->controller(AuthController::class)->group(function () {

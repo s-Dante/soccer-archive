@@ -6,16 +6,19 @@ use Illuminate\Http\Request;
 
 use App\Repositories\WorldCupRepository;
 use App\Repositories\PublicationRepository;
+use App\Repositories\CommentRepository;
 
 class WorldCupController extends Controller
 {
     protected $repository;
     protected $publicationRepository;
+    protected $commentRepository;
 
-    public function __construct(WorldCupRepository $repository, PublicationRepository $publicationRepository)
+    public function __construct(WorldCupRepository $repository, PublicationRepository $publicationRepository, CommentRepository $commentRepository)
     {
         $this->repository = $repository;
         $this->publicationRepository = $publicationRepository;
+        $this->commentRepository = $commentRepository;
     }
 
     /**
@@ -49,12 +52,21 @@ class WorldCupController extends Controller
         // --- 5. LÓGICA AÑADIDA ---
         // 2. Obtenemos todas las publicaciones APROBADAS y su multimedia
         $data = $this->publicationRepository->getForInfographicPage($worldCup->id);
-        
+        $allComments = collect();
+        foreach ($data['publications'] as $pub) {
+            $commentsForPub = $this->commentRepository->getForPublication($pub->id);
+            $allComments = $allComments->merge($commentsForPub);
+        }
+
+        // Agrupar por publication_id para acceder fácil en la vista
+        $commentsByPublication = $allComments->groupBy('publication_id');
+
         // 3. Pasamos todo a la vista (worldCup, publications, media)
         return view('world-cup', [
             'worldCup' => $worldCup,
             'publications' => $data['publications'],
-            'media' => $data['media']
+            'media' => $data['media'],
+            'commentsByPublication' => $commentsByPublication
         ]);
     }
 }

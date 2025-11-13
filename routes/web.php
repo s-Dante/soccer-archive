@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\PublicationController as AdminPublicationController;
+use App\Http\Controllers\Admin\CommentController as AdminCommentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,7 +51,7 @@ Route::post('/publications/{publication}/comments', [ApiCommentController::class
     ->name('publications.comments.store')
     ->middleware('auth'); // protege la acción de POST (necesita sesión)
 
-    
+
 
 // --- RUTAS DE AUTENTICACIÓN (Flujo Completo) ---
 Route::prefix('auth')->name('auth.')->controller(AuthController::class)->group(function () {
@@ -107,7 +108,6 @@ Route::prefix('user')->name('user.')->middleware('auth')->group(function () {
     if (config('services.features.liked_posts_page', false)) {
         Route::get('/liked', [UserController::class, 'showLiked'])->name('liked');
     }
-    
 });
 
 // --- RUTAS DEL PANEL DE ADMINISTRADOR (Aún públicas para demo) ---
@@ -143,7 +143,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::patch('/publications/{publication}', [AdminPublicationController::class, 'updateStatus'])->name('publications.updateStatus');
     Route::delete('/publications/{publication}', [AdminPublicationController::class, 'destroy'])->name('publications.destroy');
 
-    Route::view('/comments', 'admin.comments.index')->name('comments.index');
+    Route::get('/comments', [AdminCommentController::class, 'index'])->name('comments.index');
+    Route::delete('/comments/{id}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
+    Route::patch('/comments/{id}/restore', [AdminCommentController::class, 'restore'])->name('comments.restore');
 });
 
 // --- RUTAS PARA APIs EXTERNAS ---

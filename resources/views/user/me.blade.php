@@ -59,6 +59,34 @@
 
     {{-- --- SECCIÓN DE PUBLICACIONES --- --}}
     <h3 class="text-3xl font-bold mb-6 baloo-bhaijaan-2-bold border-b border-gray-700 pb-2">Mis Publicaciones</h3>
+    
+    {{-- --- INICIO: FORMULARIO DE FILTROS (Apartado) --- --}}
+    <div class="mb-6 bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+        <form action="{{ route('user.me') }}" method="GET" class="flex items-center gap-4">
+            <label for="sort" class="text-sm font-medium text-gray-300">Ordenar por:</label>
+            <select name="sort" id="sort" 
+                    class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    onchange="this.form.submit()"> {{-- Esto lo re-envía al cambiar --}}
+
+                <option value="date_desc" @if($sort == 'date_desc') selected @endif>
+                    Más recientes (defecto)
+                </option>
+                <option value="likes_desc" @if($sort == 'likes_desc') selected @endif>
+                    Más Tarjetas Verdes (Likes)
+                </option>
+                <option value="comments_desc" @if($sort == 'comments_desc') selected @endif>
+                    Más Comentarios
+                </option>
+                <option value="country_asc" @if($sort == 'country_asc') selected @endif>
+                    País (A-Z)
+                </option>
+            </select>
+            <noscript>
+                <button type="submit" class="text-sm bg-blue-600 px-3 py-1 rounded-lg">Aplicar</button>
+            </noscript>
+        </form>
+    </div>
+    {{-- --- FIN: FORMULARIO DE FILTROS --- --}}
 
     {{-- Mensaje de éxito al crear publicación --}}
     @if (session('success'))

@@ -37,18 +37,22 @@ class UserController extends Controller
     /**
      * Muestra la página de perfil del usuario autenticado.
      */
-    public function profile()
+    public function profile(Request $request)
     {
-        // --- 5. LÓGICA ACTUALIZADA ---
         $userId = Auth::id();
-        
-        // Obtenemos las publicaciones y la multimedia usando el método del repositorio
-        $profileData = $this->publicationRepository->getPublicationsForProfile($userId);
 
-        // Pasamos las publicaciones y la multimedia a la vista
+        // 1. Leemos el parámetro 'sort' de la URL.
+        // Si no existe, usamos 'date_desc' (cronológico) por defecto.
+        $sort = $request->get('sort', 'date_desc');
+
+        // 2. Pasamos el $sort al repositorio
+        $profileData = $this->publicationRepository->getPublicationsForProfile($userId, $sort);
+
+        // 3. Pasamos las variables a la vista (incluyendo $sort para el dropdown)
         return view('user.me', [
             'publications' => $profileData['publications'],
-            'media' => $profileData['media']
+            'media' => $profileData['media'],
+            'sort' => $sort // <-- Pasa la variable de sort a la vista
         ]);
     }
 

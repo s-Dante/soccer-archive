@@ -145,14 +145,19 @@ class PublicationRepository
         DB::statement('CALL sp_admin_delete_publication(?)', [$id]);
     }
 
-    public function getPublicationsForProfile(int $userId)
+    public function getPublicationsForProfile(int $userId, string $sort = 'date_desc')
     {
         $currentUserId = Auth::id() ?? 0;
 
-        $publications = DB::select('CALL sp_get_user_publications(?, ?)', [$userId, $currentUserId]);
+        // Modifica la llamada al SP para pasar el parámetro $sort
+        $publications = DB::select('CALL sp_get_user_publications_sort(?, ?, ?)', [
+            $userId, 
+            $currentUserId,
+            $sort // <-- El nuevo parámetro
+        ]);
+
         $allMedia = DB::select('CALL sp_get_user_publications_media(?)', [$userId]);
 
-        // Agrupamos la multimedia por 'publication_id' para un acceso fácil en la vista
         $mediaByPublication = collect($allMedia)->groupBy('publication_id');
 
         return [

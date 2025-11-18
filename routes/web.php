@@ -56,6 +56,10 @@ Route::post('/publications/{publication}/comments', [ApiCommentController::class
 // --- RUTAS DE AUTENTICACIÓN (Flujo Completo) ---
 Route::prefix('auth')->name('auth.')->controller(AuthController::class)->group(function () {
     
+    // Rutas de Autenticación Social
+    Route::get('/{provider}/redirect', 'redirectToProvider')->name('social.redirect');
+    Route::get('/{provider}/callback', 'handleProviderCallback')->name('social.callback');
+
     // Rutas de Login
     Route::get('/login', 'login')->name('login');
     Route::post('/login', 'loginAuth')->name('login.auth');

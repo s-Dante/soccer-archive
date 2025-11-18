@@ -138,4 +138,19 @@ class UserRepository
             $newPasswordHash
         ]);
     }
+
+    /**
+     * Encuentra o crea un usuario desde un proveedor social.
+     */
+    public function findOrCreateBySocial($user, string $provider)
+    {
+        $result = DB::selectOne('CALL sp_find_or_create_user_by_social(?, ?, ?, ?)', [
+            $user->getName(),
+            $user->getEmail(),
+            $user->getId(),
+            $provider
+        ]);
+
+        return $result;
+    }
 }

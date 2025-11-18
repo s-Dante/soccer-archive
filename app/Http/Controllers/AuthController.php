@@ -13,6 +13,7 @@ use Illuminate\Support\Str; // Necesario para generar el código
 use App\Mail\PasswordResetCode; // Necesario para la clase del email
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
@@ -125,6 +126,75 @@ class AuthController extends Controller
         return redirect()->route('auth.login');
     }
 
+
+    /**
+     * Redirige al usuario a la página de autenticación de Google.
+     */
+    public function redirectToProvider(string $provider)
+    {
+        // Válida que solo sea google o facebook
+        if (!in_array($provider, ['google', 'facebook'])) {
+            abort(404);
+        }
+        return Socialite::driver($provider)->redirect();
+    }
+
+    /**
+     * Obtiene la información del usuario de Google y lo loguea.
+     */
+    public function handleProviderCallback(string $provider)
+    {
+        if (!in_array($provider, ['google', 'facebook'])) {
+            abort(404);
+        }
+
+        try {
+            // Prueba stateless primero si tienes problemas de state:
+            $socialUser = Socialite::driver($provider)->stateless()->user();
+
+            // Para depurar: ver qué trae socialUser
+            //dd($socialUser); // Descomenta solo durante pruebas
+
+            $userRow = $this->repository->findOrCreateBySocial($socialUser, $provider);
+
+            // DEBUG: ver qué devuelve el repositorio / SP
+            //dd($userRow);
+
+            if (!$userRow) {
+                \Log::error('SP no devolvió fila para social user', [
+                    'provider' => $provider,
+                    'social_id' => $socialUser->getId() ?? null,
+                    'social_email' => $socialUser->getEmail() ?? null,
+                ]);
+                return redirect()->route('auth.login')->withErrors('Error al procesar el inicio de sesión social.');
+            }
+
+            // Asegurarse de obtener el id correctamente (array vs stdClass)
+            $userId = null;
+            if (is_object($userRow)) {
+                $userId = $userRow->id ?? $userRow->user_id ?? null;
+            } elseif (is_array($userRow)) {
+                $userId = $userRow['id'] ?? $userRow['user_id'] ?? null;
+            }
+
+            if (!$userId) {
+                \Log::error('No se encontró id en userRow', ['userRow' => $userRow]);
+                return redirect()->route('auth.login')->withErrors('No se encontró el ID del usuario.');
+            }
+
+            Auth::loginUsingId($userId);
+            session()->regenerate();
+            return redirect()->intended('/');
+        } catch (\Exception $e) {
+            \Log::error('Error en callback de socialite', [
+                'message' => $e->getMessage(),
+                'provider' => $provider,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return redirect()->route('auth.login')->withErrors('No se pudo autenticar con ' . $provider . '.');
+        }
+
+    }
     /*
     |--------------------------------------------------------------------------
     | MÉTODOS DE RESETEO DE CONTRASEÑA

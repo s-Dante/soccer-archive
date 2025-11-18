@@ -51,12 +51,12 @@
         </div>
 
         {{-- PAÍS Y FOTO DE PERFIL --}}
-        <input type="text" name="country" placeholder="País de Nacimiento" value="{{ old('country') }}" required class="w-full rounded-md bg-white/10 text-neutral-100 px-3 py-2 shadow-inner placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <div>
-            <label for="profile_photo" class="block text-sm font-medium text-neutral-300 mb-2">Foto de Perfil (Opcional)</label>
-            <input type="file" name="profile_photo" class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500">
-        </div>
-
+            <label for="country" class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500">País de nacimiento</label>
+            {{-- Asegúrate de que tenga un ID para el JS --}}
+            <select id="country" name="country" required 
+                    class="w-full rounded-md bg-white/10 text-neutral-100 px-3 py-2 shadow-inner placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">Cargando países...</option> 
+            </select>
         <button type="submit" class="w-full rounded-md bg-blue-700 hover:bg-blue-600 text-white font-semibold py-3 transition">
             Registrarse
         </button>
@@ -112,6 +112,49 @@
                     console.error('Error validating password:', error);
                 }
             });
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const countrySelect = document.getElementById('country');
+            if (!countrySelect) return;
+
+            // Función para cargar los países vía AJAX
+            async function loadCountries() {
+                try {
+                    // Llamamos a la ruta API interna que a su vez llama a la API externa
+                    const response = await fetch("{{ route('api.countries.index') }}");
+
+                    if (!response.ok) throw new Error('Error al obtener lista de países');
+
+                    const countries = await response.json();
+
+                    // Limpiamos el placeholder "Cargando países..."
+                    countrySelect.innerHTML = ''; 
+
+                    // Añadimos el placeholder por defecto
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = "";
+                    defaultOption.textContent = "Selecciona un país";
+                    countrySelect.appendChild(defaultOption);
+
+                    // Poblamos el select con los datos
+                    for (const [code, name] of Object.entries(countries)) {
+                        const option = document.createElement('option');
+                        option.value = code; // Código ISO
+                        option.textContent = name; // Nombre Común
+                        countrySelect.appendChild(option);
+                    }
+
+                } catch (error) {
+                    console.error("Error cargando países:", error);
+                    countrySelect.innerHTML = '<option value="">Error al cargar países</option>';
+                }
+            }
+
+            // Ejecutar la carga de países al iniciar
+            loadCountries();
         });
     </script>
 @endsection

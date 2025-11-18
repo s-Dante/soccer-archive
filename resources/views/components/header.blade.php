@@ -13,7 +13,11 @@
 <header x-data="{ mobileOpen: false }" class="relative w-full flex justify-between items-center py-4 px-6 lg:px-20 z-50 text-white">
     
     {{-- BUSCAR (Izquierda) --}}
-    <div class="flex-1">
+    <a href="{{ route('search.index') }}" class="baloo-bhaijaan-2-medium block glass hover:bg-white/20 rounded-full py-3 px-6 transition-colors">
+        <pre>Buscar     🔍</pre>
+    </a>
+
+    <!-- <div class="flex-1">
         {{-- Quitamos el <form> y lo reemplazamos por un <a> simple --}}
         {{-- Esto ahora es un botón que LLEVA a la página de búsqueda --}}
         <a href="{{ route('search.index') }}" 
@@ -34,7 +38,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
             </svg>
         </a>
-    </div>
+    </div> -->
 
     {{-- LOGO (Centro) --}}
     <div class="lg:absolute lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">

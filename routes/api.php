@@ -4,7 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PasswordValidationController;
 use App\Http\Controllers\Api\InteractionController;
-
+use App\Http\Controllers\Api\CountryController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -42,5 +42,5 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/validate-password', [PasswordValidationController::class, 'validatePassword'])
             ->name('api.validate-password');
 
-
+Route::get('/countries', [CountryController::class, 'index'])->name('api.countries.index');
 ?>

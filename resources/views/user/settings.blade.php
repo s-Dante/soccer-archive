@@ -92,17 +92,18 @@
                             @error('gender') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
                         {{-- País --}}
-                        <div>
-                            <label for="country" class="block mb-2 text-sm font-medium text-gray-300">País</label>
-                            <select id="country" name="country" class="w-full bg-gray-700 border border-gray-600 rounded p-2.5 text-white">
-                                <option value="" disabled>Selecciona un país...</option>
-                                @foreach($countries as $country)
-                                    <option value="{{ $country }}" {{ old('country', $user->country) == $country ? 'selected' : '' }}>
-                                        {{ $country }}
-                                    </option>
-                                @endforeach
+                        <div class="mb-4">
+                            <label for="country" class="block mb-2 text-sm font-medium text-gray-300"">País de nacimiento</label>
+                            {{-- Asegúrate de que tenga el ID 'country' --}}
+                            <select id="country" name="country" required 
+                                    class="w-full bg-gray-700 border border-gray-600 rounded p-2.5 text-white">
+                                {{-- Mantenemos la opción del usuario actual como valor seleccionado --}}
+                                @if($user->country)
+                                    <option value="{{ $user->country }}" selected>Cargando... (Actual: {{ $user->country }})</option>
+                                @else
+                                    <option value="">Cargando países...</option>
+                                @endif
                             </select>
-                            @error('country') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
                     </div>
 
@@ -198,4 +199,57 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const countrySelect = document.getElementById('country');
+    if (!countrySelect) return;
+
+    // Guardamos el valor actual del usuario (si existe) para pre-seleccionarlo
+    const currentCountry = countrySelect.value;
+    
+    // Función para cargar los países vía AJAX
+    async function loadCountries() {
+        try {
+            // Reutilizamos la misma ruta API
+            const response = await fetch("{{ route('api.countries.index') }}");
+            
+            if (!response.ok) throw new Error('Error al obtener lista de países');
+
+            const countries = await response.json();
+            
+            // 1. Limpiamos las opciones
+            countrySelect.innerHTML = ''; 
+            
+            // 2. Añadimos el placeholder por defecto
+            const defaultOption = document.createElement('option');
+            defaultOption.value = "";
+            defaultOption.textContent = "Selecciona un país";
+            countrySelect.appendChild(defaultOption);
+
+            // 3. Poblamos y pre-seleccionamos
+            for (const [code, name] of Object.entries(countries)) {
+                const option = document.createElement('option');
+                option.value = code; // Código ISO
+                option.textContent = name; // Nombre Común
+                
+                // Si el código del país coincide con el del usuario, lo pre-seleccionamos
+                if (code === currentCountry) {
+                    option.selected = true;
+                }
+                
+                countrySelect.appendChild(option);
+            }
+
+        } catch (error) {
+            console.error("Error cargando países:", error);
+            countrySelect.innerHTML = '<option value="">Error al cargar países</option>';
+        }
+    }
+
+    // Ejecutar la carga de países al iniciar
+    loadCountries();
+});
+</script>
+
 @endsection

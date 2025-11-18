@@ -47,9 +47,12 @@
                     {{-- Filtro 3: País Sede --}}
                     <div>
                         <label for="host_country" class="block mb-2 text-sm font-medium text-gray-300">País Sede</label>
-                        <input type="text" id="host_country" name="host_country" value="{{ request('host_country') }}"
-                               placeholder="Ej: Mexico"
-                               class="w-full bg-gray-700 border border-gray-600 rounded p-2.5 text-white focus:ring-blue-500 focus:border-blue-500">
+                        {{-- CAMBIADO A SELECT --}}
+                        <select id="host_country" name="host_country"
+                                class="w-full bg-gray-700 border border-gray-600 rounded p-2.5 text-white focus:ring-blue-500 focus:border-blue-500">
+                            {{-- Opción inicial para mantener el filtro activo y mostrar 'Cargando...' --}}
+                            <option value="{{ request('host_country') }}" selected>Cargando países...</option>
+                        </select>
                     </div>
 
                     {{-- Filtro 4: Autor (Usuario) --}}
@@ -117,4 +120,57 @@
 
     </div>
 </div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const countrySelect = document.getElementById('host_country');
+        if (!countrySelect) return;
+
+        // Capturamos el valor actual de la URL para pre-seleccionar después
+        const currentCountryFilter = countrySelect.value;
+        
+        async function loadCountries() {
+            try {
+                // Reutilizamos la ruta API que llama al CountryService
+                const response = await fetch("{{ route('api.countries.index') }}");
+                
+                if (!response.ok) throw new Error('Error al obtener lista de países');
+
+                const countries = await response.json();
+                
+                // Limpiamos la opción de 'Cargando' y el filtro viejo
+                countrySelect.innerHTML = ''; 
+                
+                // Opción por defecto "Todos" (para limpiar el filtro)
+                const defaultAllOption = document.createElement('option');
+                defaultAllOption.value = "";
+                defaultAllOption.textContent = "Todos los países sede";
+                countrySelect.appendChild(defaultAllOption);
+
+                // Poblamos y pre-seleccionamos
+                for (const [code, name] of Object.entries(countries)) {
+                    const option = document.createElement('option');
+                    // Usamos el NOMBRE del país como valor (ya que tu filtro GET busca por nombre/texto)
+                    option.value = name; 
+                    option.textContent = name; 
+                    
+                    // Si el nombre del país coincide con el filtro de la URL
+                    if (name === currentCountryFilter) {
+                        option.selected = true;
+                    }
+                    
+                    countrySelect.appendChild(option);
+                }
+
+            } catch (error) {
+                console.error("Error cargando países:", error);
+                countrySelect.innerHTML = '<option value="">Error al cargar países</option>';
+            }
+        }
+
+        // Ejecutar la carga
+        loadCountries();
+    });
+    </script>
 @endsection
